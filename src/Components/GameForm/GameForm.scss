@@ -1,0 +1,29 @@
+.GameForm {
+  position: relative;
+
+  > form {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    
+    input.letter-input {
+      width: 2em;
+      height: 2em;
+      font-size: 1.5em;
+      text-align: center;
+      border: 1px solid #000;
+      border-radius: 0.5em;
+      margin: 0.5em;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .letter-input-container {
+      display: flex;
+      flex-flow: column nowrap;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+}

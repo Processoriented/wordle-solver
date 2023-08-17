@@ -1,25 +1,27 @@
 import React from 'react';
-import logo from './logo.svg';
+
+import Choices from './Components/Choices/Choices';
+import GameForm from './Components/GameForm/GameForm';
+import GameProvider from './Providers/GameProvider';
+
 import './App.scss';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <GameProvider>
+      <div className="App">
+        <header className="App-header">
+          <h1>Wordle Solver</h1>
+        </header>
+        <main className="App-main">
+          <GameForm />
+          <Choices />
+        </main>
+        <footer className="App-footer">
+          <p>Created by <a href="mailto://processoriented@gmail.com">Vincent Engler</a></p>
+        </footer>
+      </div>
+    </GameProvider>
   );
 }
 
