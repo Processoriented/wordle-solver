@@ -5,6 +5,7 @@ import GameForm from './Components/GameForm/GameForm';
 import GameProvider from './Providers/GameProvider';
 
 import './App.scss';
+import PrevGuesses from './Components/GameForm/PrevGuesses';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <h1>Wordle Solver</h1>
         </header>
         <main className="App-main">
+          <PrevGuesses />
           <GameForm />
           <Choices />
         </main>

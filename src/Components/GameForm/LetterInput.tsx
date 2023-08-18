@@ -1,28 +1,107 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { LetterInputValue, LetterResult } from '../../Providers/providerTypes';
+import { useGameContext } from '../../Providers/GameProvider';
+import './LetterInput.scss';
 
 
-interface LetterInputProps {
-  name: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}
+type Props = {
+  defaultValue?: LetterInputValue;
+  disabled?: boolean;
+  name?: string;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+};
 
-function LetterInput(props: LetterInputProps, ref: React.ForwardedRef<HTMLInputElement>) {
-  const { name, onChange } = props;
+const dfltVal: LetterInputValue = ['', "none"];
+const dfltProps: Props = {
+  defaultValue: dfltVal,
+  disabled: false,
+  name: '',
+  onChange: () => {},
+};
 
-  const radioNameBase = useMemo(() => `${name}-result`, [name]);
+function LetterInput(props: Props, ref: React.ForwardedRef<HTMLInputElement>) {
+  const { defaultValue, disabled, name, onChange } = { ...dfltProps, ...props };
+  const { resetTime } = useGameContext();
+  const [value, setValue] = useState<LetterInputValue>(defaultValue ?? dfltVal);
+  const localRef = useRef<HTMLInputElement>(null);
+  const resetRef = useRef<number>(0);
+  ref = ref || localRef;
+
+  useEffect(() => {
+    if ((resetTime === resetRef.current) || disabled) return;
+    resetRef.current = Math.max(resetTime, resetRef.current);
+    setValue(dfltVal);
+  }, [disabled, resetTime]);
+
+  const inputClassName = useMemo(() => {
+    const base = "letter-input";
+    const result = [...value].pop() as LetterResult;
+    const resultClass = {
+      placed: "letter-input--placed",
+      misplaced: "letter-input--misplaced",
+      incorrect: "letter-input--incorrect",
+      none: null,
+    }[result];
+    return [base, resultClass].filter(Boolean).join(" ");
+  }, [value]);
+
+  useEffect(() => {
+    if (!disabled) return;
+    console.dir({ value, inputClassName});
+  }, [disabled, value, inputClassName]);
+
+  const handleClick = useCallback((event: React.MouseEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    setValue(([val, result]) => {
+      if (!(typeof val === 'string' && val.length > 0)) return [val, result];
+      const nextResult = {
+        placed: "none",
+        misplaced: "placed",
+        incorrect: "misplaced",
+        none: "incorrect",
+      }[result] as LetterResult;
+      return [val, nextResult];
+    });
+  }, []);
+
+  const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const { value } = event.target;
+    setValue(([prev, result]) => {
+      const reportChange = ((prev !== value) && typeof onChange === 'function');
+      if (reportChange) onChange(event);
+      return [value, result];
+    });
+  }, [onChange]);
+
+  const otherProps = useMemo(() => {
+    const readOnly = (disabled || (typeof value[0] === 'string' && value[0].length > 0));
+    const always = { readOnly };
+    return disabled ?
+      { ...always, disabled, defaultValue: value[0] } :
+      { ...always, onChange: handleChange};
+  }, [disabled, handleChange, value]);
+
+  const hiddenProps = useMemo(() => {
+    const always = { name: `${name}Result` };
+    return disabled ?
+      { ...always, defaultValue: value[1] } :
+      { ...always, value: value[1] };
+  }, [disabled, name, value]);
 
   return (
-    <div className="letter-input-container">
-      <input type="text" name={name} className="letter-input" ref={ref} onChange={onChange} />
-      <input type="radio" name={radioNameBase} value="placed" id={`${radioNameBase}-placed`} />
-      <label htmlFor={`${radioNameBase}-placed`}>Placed</label>
-      <input type="radio" name={radioNameBase} value="misplaced" id={`${radioNameBase}-misplaced`} />
-      <label htmlFor={`${radioNameBase}-misplaced`}>Misplaced</label>
-      <input type="radio" name={radioNameBase} value="incorrect" id={`${radioNameBase}-incorrect`} />
-      <label htmlFor={`${radioNameBase}-incorrect`}>Incorrect</label>
-      <input type="radio" name={radioNameBase} value="unchecked" id={`${radioNameBase}-unchecked`} defaultChecked />
-      <label htmlFor={`${radioNameBase}-unchecked`}>Unchecked</label>
-    </div>
+    <>
+      <input
+        type="text"
+        name={name}
+        className={inputClassName}
+        ref={ref}
+        onClick={handleClick}
+        {...otherProps}
+      />
+      <input type="hidden" {...hiddenProps} />
+    </>
   );
 }
 

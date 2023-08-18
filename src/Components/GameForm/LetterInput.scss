@@ -1,0 +1,28 @@
+input.letter-input {
+  width: 2em;
+  height: 2em;
+  font-size: 1.5em;
+  text-align: center;
+  border: 1px solid #000;
+  border-radius: 0.5em;
+  margin: 0.5em;
+  padding: 0;
+  box-sizing: border-box;
+
+  &:read-only {
+    background-color: #ccc;
+    cursor: pointer;
+
+    &.letter-input--placed {
+      background-color: greenyellow;
+    }
+
+    &.letter-input--misplaced {
+      background-color: yellow;
+    }
+
+    &.letter-input--incorrect {
+      background-color: rosybrown;
+    }
+  }
+}

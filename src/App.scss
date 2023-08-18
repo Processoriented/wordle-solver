@@ -14,11 +14,13 @@
 }
 
 .App-main {
-  flex: 1 0 82vh;
+  flex: 0 0 82vh;
   display: flex;
   flex-flow: column nowrap;
   justify-content: space-between;
   align-items: flex-start;
+  position: relative;
+  max-height: 82vh;
 }
 
 .App-footer {
