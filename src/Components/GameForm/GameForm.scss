@@ -4,9 +4,21 @@
 
   > form {
     display: flex;
-    flex-flow: row nowrap;
-    justify-content: center;
-    align-items: center;
+    flex-flow: column nowrap;
+    > .letters {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: center;
+      align-items: center;
+    }
+    > .buttons {
+      display: flex;
+      flex-flow: column nowrap;
+      justify-content: center;
+      align-items: flex-end;
+      row-gap: 0.5rem;
+      margin-right: 1rem;
+    }
   }
 }
 

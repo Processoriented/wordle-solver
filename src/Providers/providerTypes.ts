@@ -45,30 +45,36 @@ export class Guess {
     return [...(new Set([...this.placedLetters, ...this.misplacedLetters]))];
   }
 
+  get allowedLetters() {
+    const alphabet = "abcdefghijklmnopqrstuvwxyz".split('');
+    const allowed = alphabet.filter(letter => !this.incorrectLetters.includes(letter));
+    return this.letters.reduce((acc, letter) => {
+      if (letter.result === "placed") return [...acc, [letter.letter]];
+      return [...acc, [...(allowed.filter(l => l !== letter.letter))]];
+    }, [] as string[][]);
+  }
+
   testWord(word: string) {
     const testLetters = word.split('');
-    const hasIncorrect = testLetters.some(letter => this.incorrectLetters.includes(letter));
-    if (hasIncorrect) return false;
-    const hasKnownMisplaced = testLetters.reduce((acc, letter, idx) => {
-      const { letter: char, result } = this.letters[idx] ?? { letter, result: "misplaced" };
-      if (result === "misplaced" && char === letter) return true;
-      return false || acc;
-    }, false);
-    if (hasKnownMisplaced) return false;
-    const missingMovedMisplaced = testLetters.reduce((acc, letter, idx) => {
-      const isMisplaced = this.letters.filter(({ result }) => result === "misplaced")
-        .some(({ letter: char }) => char === letter);
-      const notMoved = this.letters[idx]?.letter === letter;
-      if (isMisplaced && notMoved) return true;
-      return false || acc;
-    }, false);
-    if (missingMovedMisplaced) return false;
-    const missingPlacedLetter = testLetters.reduce((acc, letter, idx) => {
-      const { letter: char, result } = this.letters[idx] ?? { letter: null, result: "placed" };
-      if (result === "placed" && char !== letter) return true;
-      return false || acc;
-    }, false);
-    return !missingPlacedLetter;
+    // check for incorrect length
+    if (testLetters.length !== this.letters.length) return false;
+    // check for same word
+    if (word === this.word) return false;
+    // check each position for allowed letters
+    const allAllowed = testLetters.every((letter, idx) => this.allowedLetters[idx].includes(letter));
+    if (!allAllowed) return false;
+    // expected moved letters - test word has all misplaced letters in different positions than the guess
+    // note that the new position for the letter cannot be the same as either the guess position or any
+    // position that the guess letter shows as placed.
+    const validMovePositions = this.letters.filter(({ result }) => result !== "placed")
+      .map(({ position }) => position);
+    const expectedMoves = this.letters.filter(({ result }) => result === "misplaced").reduce(
+      (a, {letter, position}) => ({ ...a, [letter]: validMovePositions.filter(p => p !== position) }), {} as { [letter: string]: number[] });
+    const hasExpectedMoves = Object.entries(expectedMoves).every(([letter, positions]) => {
+      const testLetterIdx = testLetters.indexOf(letter);
+      return positions.includes(testLetterIdx);
+    });
+    return hasExpectedMoves;
   }
 
   get values(): LetterInputValue[] {
@@ -77,9 +83,14 @@ export class Guess {
 }
 
 export interface GameContextInterface {
+  allValidWords: string[];
   currentValidWords: string[];
+  scoredWords: [string, number][];
+  // choices: { word: string, letterTests: ;
   guesses: Guess[];
   onGuessSubmit: (event: SubmitEvent) => string|null;
   resetTime: number;
   requestReset: () => void;
+  selectedChoice: string;
+  setSelectedChoice: (choice: string) => void;
 }
