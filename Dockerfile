@@ -11,6 +11,8 @@ WORKDIR /usr/src/app
 
 COPY --from=0 /clone-workspace /usr/src/app/
 
+WORKDIR /usr/src/app/wordle-solver
+
 # Install app dependencies.
 RUN npm ci --only=production
 
