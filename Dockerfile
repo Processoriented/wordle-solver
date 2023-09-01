@@ -4,8 +4,6 @@ WORKDIR /clone-workspace
 
 RUN git clone https://github.com/Processoriented/wordle-solver.git
 
-RUN git checkout feature/add-api
-
 FROM node:lts-hydrogen
 
 # Create and change to the app directory.
