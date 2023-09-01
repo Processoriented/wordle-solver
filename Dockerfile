@@ -13,11 +13,11 @@ COPY --from=0 /clone-workspace /usr/src/app/
 
 WORKDIR /usr/src/app/wordle-solver
 
-# Install app dependencies.
-RUN npm ci --only=production
-
 # Install global dependencies.
 RUN npm install -g serve typescript
+
+# Install app dependencies.
+RUN npm ci --only=production
 
 # Build the app.
 RUN npm run build
