@@ -11,8 +11,14 @@ WORKDIR /usr/src/app
 
 COPY --from=0 /clone-workspace /usr/src/app/
 
-# Install dependencies.
+# Install app dependencies.
 RUN npm ci --only=production
 
+# Install global dependencies.
+RUN npm install -g serve typescript
+
+# Build the app.
+RUN npm run build
+
 # Run the web service on container startup.
-ENTRYPOINT [ "node", "index.js" ]
+ENTRYPOINT [ "serve", "-s", "build" ]
