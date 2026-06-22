@@ -66,19 +66,19 @@ export default function GameProvider({ children }) {
     }, {} as { [key: string]: number });
     const info = (!(Array.isArray(guesses) && guesses.length > 0)) ? scored : currentValidWords.reduce((acc, word) => {
       const outcomes = getOutcomes(word);
-      const probabilities = Object.entries(outcomes).reduce((acc, [outcome, count]) => {
+      const probabilities = (Object.entries(outcomes) as [string, number][]).reduce((acc, [outcome, count]) => {
         acc[outcome] = count / currentValidWords.length;
         return acc;
       }, {} as { [key: string]: number });
-      const information = Object.entries(probabilities).reduce((acc, [key, prob]) => {
-        acc[key] = prob * Math.log2((1 /prob));
+      const information = (Object.entries(probabilities) as [string, number][]).reduce((acc, [key, prob]) => {
+        acc[key] = prob * Math.log2((1 / prob));
         return acc;
       }, {} as { [key: string]: number });
       const entropy = Object.values(information).reduce((acc, info) => acc + info, 0);
       acc[word] = entropy;
       return acc;
     }, {} as { [key: string]: number });
-    return Object.entries(info).sort((a, b) => b[1] - a[1]);
+    return (Object.entries(info) as [string, number][]).sort(([, a], [, b]) => b - a);
   }, [currentValidWords, guesses])
 
 

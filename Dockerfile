@@ -1,24 +1,13 @@
-FROM alpine/git:latest
-
-WORKDIR /clone-workspace
-
-RUN git clone https://github.com/Processoriented/wordle-solver.git
-
-FROM node:lts-hydrogen
-
-# Create and change to the app directory.
-WORKDIR /usr/src/app
-
-COPY --from=0 /clone-workspace /usr/src/app/
-
-# Install app dependencies.
-RUN npm ci --only=production
-
-# Install global dependencies.
-RUN npm install -g serve typescript
-
-# Build the app.
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
 RUN npm run build
 
-# Run the web service on container startup.
-ENTRYPOINT [ "serve", "-s", "build" ]
+FROM node:24-alpine
+RUN npm install -g serve
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+EXPOSE 3000
+CMD ["serve", "-s", "dist", "-l", "3000"]
