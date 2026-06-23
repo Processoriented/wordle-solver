@@ -1,11 +1,11 @@
-import React from 'react';
+import type { SubmitEvent as ReactSubmitEvent } from 'react';
 
 import { feedbackMatches } from './wordleScore';
 import { LetterInputValue, LetterResult } from './letterTypes';
 
 export type { LetterInputValue, LetterResult } from './letterTypes';
 export type positionObj = { solution: string, misplaced: string[] };
-export type SubmitEvent = React.FormEvent<HTMLFormElement>;
+export type SubmitEvent = ReactSubmitEvent<HTMLFormElement>;
 export type ScoringMetric = 'entropy' | 'expectedRemaining';
 export type ScoringMode = 'probe' | 'solve';
 

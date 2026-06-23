@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type SubmitEvent, type SyntheticEvent } from 'react';
 import { useGameContext } from '../../Providers/GameProvider';
 
 import './GameForm.scss';
@@ -17,7 +17,7 @@ function GameForm() {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [values, setValues] = useState<LetterInputValue[]>([]);
 
-  const onLetterChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const onLetterChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     const validInput = (typeof value === 'string' && value.length > 0);
     const valIdx = ['first', 'second', 'third', 'fourth', 'fifth'].indexOf(name);
@@ -32,12 +32,12 @@ function GameForm() {
     if (value.length === 1 && nextRef) nextRef.current?.focus();
   }, []);
 
-  const handleReset = useCallback((event: React.FormEvent<HTMLFormElement>) => {
+  const handleReset = useCallback((event: SyntheticEvent<HTMLFormElement>) => {
     requestReset();
     firstRef.current?.focus();
   }, [requestReset]);
 
-  const handleSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setValidityMessage(null);
     const nextMsg = onGuessSubmit(event);

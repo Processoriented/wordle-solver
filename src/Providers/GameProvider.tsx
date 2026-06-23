@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import {
   GameContextInterface,
@@ -6,6 +6,7 @@ import {
   LetterResult,
   ScoringMetric,
   ScoringMode,
+  SubmitEvent,
 } from './providerTypes';
 import { validWords as allValidWords } from './validWords';
 import { scoredEntropy, scoredExpectedRemaining } from './validWords.scored';
@@ -64,7 +65,7 @@ export default function GameProvider({ children }) {
     }
   }, []);
 
-  const onGuessSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
+  const onGuessSubmit = useCallback((event: SubmitEvent) => {
     event.preventDefault();
     const formValues = new FormData(event.target as HTMLFormElement);
     const names = ['first', 'second', 'third', 'fourth', 'fifth'];

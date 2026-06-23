@@ -1,5 +1,3 @@
-import React from 'react';
-
 import Choices from './Components/Choices/Choices';
 import GameForm from './Components/GameForm/GameForm';
 import GameProvider from './Providers/GameProvider';

@@ -1,4 +1,14 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ForwardedRef,
+  type MouseEvent,
+} from 'react';
 
 import { GuessLetter, LetterInputValue, LetterResult } from '../../Providers/providerTypes';
 import { useGameContext } from '../../Providers/GameProvider';
@@ -9,7 +19,7 @@ type Props = {
   defaultValue?: LetterInputValue;
   disabled?: boolean;
   name?: string;
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   value?: LetterInputValue;
 };
 
@@ -21,7 +31,7 @@ const dfltProps: Props = {
   onChange: () => {},
 };
 
-function LetterInput(props: Props, ref: React.ForwardedRef<HTMLInputElement>) {
+function LetterInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   const { defaultValue, disabled, name, onChange, value: propVal } = { ...dfltProps, ...props };
   const { guesses, resetTime } = useGameContext();
   const [value, setValue] = useState<LetterInputValue>(defaultValue ?? dfltVal);
@@ -68,7 +78,7 @@ function LetterInput(props: Props, ref: React.ForwardedRef<HTMLInputElement>) {
     return [base, resultClass].filter(Boolean).join(" ");
   }, [value]);
 
-  const handleClick = useCallback((event: React.MouseEvent<HTMLInputElement>) => {
+  const handleClick = useCallback((event: MouseEvent<HTMLInputElement>) => {
     event.preventDefault();
     setValue(([val, result]) => {
       if (!(typeof val === 'string' && val.length > 0)) return [val, result];
@@ -82,7 +92,7 @@ function LetterInput(props: Props, ref: React.ForwardedRef<HTMLInputElement>) {
     });
   }, []);
 
-  const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     const { value } = event.target;
     setValue(([prev, result]) => {
@@ -122,4 +132,4 @@ function LetterInput(props: Props, ref: React.ForwardedRef<HTMLInputElement>) {
   );
 }
 
-export default React.forwardRef(LetterInput);
+export default forwardRef(LetterInput);

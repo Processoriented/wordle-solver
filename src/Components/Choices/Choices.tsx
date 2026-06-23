@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type MouseEvent } from 'react';
 
 import { useGameContext } from '../../Providers/GameProvider';
 import { ScoringMetric } from '../../Providers/providerTypes';
@@ -29,7 +29,7 @@ function Choices() {
   } = useGameContext();
 
   const mkHandler = useCallback((word: string) => {
-    return (event: React.MouseEvent<HTMLButtonElement>) => {
+    return (event: MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
       if (!(typeof word === 'string' && word.length === 5)) return;
       setSelectedChoice(word);

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { useGameContext } from '../../Providers/GameProvider';
 import LetterInput from './LetterInput';
