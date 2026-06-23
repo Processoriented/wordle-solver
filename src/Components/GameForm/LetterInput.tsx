@@ -1,21 +1,22 @@
 import {
-  forwardRef,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
   type ChangeEvent,
-  type ForwardedRef,
   type MouseEvent,
+  type Ref,
 } from 'react';
 
 import { GuessLetter, LetterInputValue, LetterResult } from '../../Providers/providerTypes';
 import { useGameContext } from '../../Providers/GameProvider';
 import './LetterInput.scss';
 
+const dfltVal: LetterInputValue = ['', 'none'];
 
 type Props = {
+  ref?: Ref<HTMLInputElement>;
   defaultValue?: LetterInputValue;
   disabled?: boolean;
   name?: string;
@@ -23,24 +24,22 @@ type Props = {
   value?: LetterInputValue;
 };
 
-const dfltVal: LetterInputValue = ['', "none"];
-const dfltProps: Props = {
-  defaultValue: dfltVal,
-  disabled: false,
-  name: '',
-  onChange: () => {},
-};
-
-function LetterInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
-  const { defaultValue, disabled, name, onChange, value: propVal } = { ...dfltProps, ...props };
+function LetterInput({
+  ref,
+  defaultValue = dfltVal,
+  disabled = false,
+  name = '',
+  onChange = () => {},
+  value: propVal,
+}: Props) {
   const { guesses, resetTime } = useGameContext();
-  const [value, setValue] = useState<LetterInputValue>(defaultValue ?? dfltVal);
+  const [value, setValue] = useState<LetterInputValue>(defaultValue);
   const localRef = useRef<HTMLInputElement>(null);
   const resetRef = useRef<number>(0);
-  ref = ref || localRef;
+  const inputRef = ref ?? localRef;
 
   const letterIdx = useMemo(() => {
-    return ['first', 'second', 'third', 'fourth', 'fifth'].indexOf(name ?? '');
+    return ['first', 'second', 'third', 'fourth', 'fifth'].indexOf(name);
   }, [name]);
 
   const previousValResults = useMemo(() => {
@@ -49,7 +48,7 @@ function LetterInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
       .filter((guess) => Array.isArray(guess?.letters) && guess.letters.length > letterIdx)
       .map(({ letters }) => letters[letterIdx])
       .filter((letter) => letter instanceof GuessLetter)
-      .reduce((acc, {letter, result}) => ({ ...acc, [letter]: result }), {});
+      .reduce((acc, { letter, result }) => ({ ...acc, [letter]: result }), {});
   }, [guesses, letterIdx]);
 
   useEffect(() => {
@@ -61,21 +60,21 @@ function LetterInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   useEffect(() => {
     if (typeof propVal === 'undefined') return;
     let [val, result] = propVal;
-    result = (result !== 'none') ? result : previousValResults[val] ?? "none";
+    result = (result !== 'none') ? result : previousValResults[val] ?? 'none';
     const nextValue = [val, result] as LetterInputValue;
     setValue(nextValue);
   }, [name, previousValResults, propVal]);
 
   const inputClassName = useMemo(() => {
-    const base = "letter-input";
+    const base = 'letter-input';
     const result = [...value].pop() as LetterResult;
     const resultClass = {
-      placed: "letter-input--placed",
-      misplaced: "letter-input--misplaced",
-      incorrect: "letter-input--incorrect",
+      placed: 'letter-input--placed',
+      misplaced: 'letter-input--misplaced',
+      incorrect: 'letter-input--incorrect',
       none: null,
     }[result];
-    return [base, resultClass].filter(Boolean).join(" ");
+    return [base, resultClass].filter(Boolean).join(' ');
   }, [value]);
 
   const handleClick = useCallback((event: MouseEvent<HTMLInputElement>) => {
@@ -83,10 +82,10 @@ function LetterInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
     setValue(([val, result]) => {
       if (!(typeof val === 'string' && val.length > 0)) return [val, result];
       const nextResult = {
-        placed: "none",
-        misplaced: "placed",
-        incorrect: "misplaced",
-        none: "incorrect",
+        placed: 'none',
+        misplaced: 'placed',
+        incorrect: 'misplaced',
+        none: 'incorrect',
       }[result] as LetterResult;
       return [val, nextResult];
     });
@@ -94,27 +93,27 @@ function LetterInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
 
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
-    const { value } = event.target;
+    const { value: nextLetter } = event.target;
     setValue(([prev, result]) => {
-      const reportChange = ((prev !== value) && typeof onChange === 'function');
+      const reportChange = ((prev !== nextLetter) && typeof onChange === 'function');
       if (reportChange) onChange(event);
-      return [value, result];
+      return [nextLetter, result];
     });
   }, [onChange]);
 
   const otherProps = useMemo(() => {
     const readOnly = (disabled || (typeof value[0] === 'string' && value[0].length > 0));
     const always = { readOnly };
-    return disabled ?
-      { ...always, disabled, defaultValue: value[0] } :
-      { ...always, onChange: handleChange, value: value[0]};
+    return disabled
+      ? { ...always, disabled, defaultValue: value[0] }
+      : { ...always, onChange: handleChange, value: value[0] };
   }, [disabled, handleChange, value]);
 
   const hiddenProps = useMemo(() => {
     const always = { name: `${name}Result` };
-    return disabled ?
-      { ...always, defaultValue: value[1] } :
-      { ...always, value: value[1] };
+    return disabled
+      ? { ...always, defaultValue: value[1] }
+      : { ...always, value: value[1] };
   }, [disabled, name, value]);
 
   return (
@@ -123,7 +122,7 @@ function LetterInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
         type="text"
         name={name}
         className={inputClassName}
-        ref={ref}
+        ref={inputRef}
         onClick={handleClick}
         {...otherProps}
       />
@@ -132,4 +131,4 @@ function LetterInput(props: Props, ref: ForwardedRef<HTMLInputElement>) {
   );
 }
 
-export default forwardRef(LetterInput);
+export default LetterInput;
