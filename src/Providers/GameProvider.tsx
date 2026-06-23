@@ -3,9 +3,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { GameContext } from './GameContext';
 import {
   Guess,
+  GUESS_LETTER_FIELDS,
+  guessLetterResultField,
   LETTER_RESULT,
   type LetterResult,
   SCORING_METRIC,
+  SCORING_MODE,
   type ScoringMetric,
   type ScoringMode,
   type SubmitEvent,
@@ -56,11 +59,11 @@ export default function GameProvider({ children }) {
   const onGuessSubmit = useCallback((event: SubmitEvent) => {
     event.preventDefault();
     const formValues = new FormData(event.target);
-    const names = ['first', 'second', 'third', 'fourth', 'fifth'];
-    const [s1, s2, s3, s4, s5] = names.map((name) => getFormString(formValues, name));
-    const results: LetterResult[] = names
-      .map((name) => `${name}Result`)
-      .map((name) => getFormString(formValues, name, LETTER_RESULT.NONE) as LetterResult)
+    const [s1, s2, s3, s4, s5] = GUESS_LETTER_FIELDS.map((name) => getFormString(formValues, name));
+    const results: LetterResult[] = GUESS_LETTER_FIELDS.map((name) =>
+      getFormString(formValues, guessLetterResultField(name), LETTER_RESULT.NONE),
+    )
+      .map((r) => r as LetterResult)
       .map((r) => (r === LETTER_RESULT.NONE ? LETTER_RESULT.INCORRECT : r));
     const word = [s1, s2, s3, s4, s5].join('');
     if (!(typeof word === 'string' && word.length === 5)) return `Invalid word ${word}`;
@@ -94,7 +97,9 @@ export default function GameProvider({ children }) {
 
   const remainingAnswerCount = remainingAnswers.length;
   const scoringMode: ScoringMode =
-    remainingAnswerCount <= SOLVE_MODE_THRESHOLD && guesses.length > 0 ? 'solve' : 'probe';
+    remainingAnswerCount <= SOLVE_MODE_THRESHOLD && guesses.length > 0
+      ? SCORING_MODE.SOLVE
+      : SCORING_MODE.PROBE;
 
   const positionalLetterFrequencies = useMemo(
     () => buildPositionalFrequencies(remainingAnswers),
@@ -112,7 +117,7 @@ export default function GameProvider({ children }) {
   }, [remainingAnswers, positionalLetterFrequencies]);
 
   const scoredWords = useMemo(() => {
-    if (scoringMode === 'solve') {
+    if (scoringMode === SCORING_MODE.SOLVE) {
       return rankedAnswers.map(
         (word) =>
           [word, positionalFrequencyScore(word, positionalLetterFrequencies)] as [string, number],

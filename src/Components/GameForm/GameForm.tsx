@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -11,50 +12,56 @@ import { useGameContext } from '../../Providers/GameContext';
 
 import './GameForm.scss';
 import LetterInput from './LetterInput';
-import { LETTER_RESULT, type LetterInputValue } from '../../Providers/letterTypes';
+import {
+  GUESS_LETTER_FIELDS,
+  LETTER_RESULT,
+  type GuessLetterField,
+  type LetterInputValue,
+} from '../../Providers/letterTypes';
 
 function GameForm() {
   const { onGuessSubmit, requestReset, selectedChoice } = useGameContext();
   const [validityMessage, setValidityMessage] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const firstRef = useRef<HTMLInputElement>(null);
-  const secondRef = useRef<HTMLInputElement>(null);
-  const thirdRef = useRef<HTMLInputElement>(null);
-  const fourthRef = useRef<HTMLInputElement>(null);
-  const fifthRef = useRef<HTMLInputElement>(null);
+  const letterRef0 = useRef<HTMLInputElement>(null);
+  const letterRef1 = useRef<HTMLInputElement>(null);
+  const letterRef2 = useRef<HTMLInputElement>(null);
+  const letterRef3 = useRef<HTMLInputElement>(null);
+  const letterRef4 = useRef<HTMLInputElement>(null);
+  const letterRefs = useMemo(
+    () => [letterRef0, letterRef1, letterRef2, letterRef3, letterRef4],
+    [],
+  );
   const btnRef = useRef<HTMLButtonElement>(null);
   const [values, setValues] = useState<LetterInputValue[]>([]);
 
-  const onLetterChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    const validInput = typeof value === 'string' && value.length > 0;
-    const valIdx = ['first', 'second', 'third', 'fourth', 'fifth'].indexOf(name);
-    if (valIdx < 0) return;
-    setValues(
-      (prev) =>
-        [
-          ...prev.slice(0, valIdx),
-          validInput ? [value, LETTER_RESULT.NONE] : ['', LETTER_RESULT.NONE],
-          ...prev.slice(valIdx + 1),
-        ] as LetterInputValue[],
-    );
-    if (!validInput) return;
-    const nextRef = {
-      first: secondRef,
-      second: thirdRef,
-      third: fourthRef,
-      fourth: fifthRef,
-      fifth: btnRef,
-    }[name];
-    if (value.length === 1 && nextRef) nextRef.current?.focus();
-  }, []);
+  const onLetterChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = event.target;
+      const validInput = typeof value === 'string' && value.length > 0;
+      const valIdx = GUESS_LETTER_FIELDS.indexOf(name as GuessLetterField);
+      if (valIdx < 0) return;
+      setValues(
+        (prev) =>
+          [
+            ...prev.slice(0, valIdx),
+            validInput ? [value, LETTER_RESULT.NONE] : ['', LETTER_RESULT.NONE],
+            ...prev.slice(valIdx + 1),
+          ] as LetterInputValue[],
+      );
+      if (!validInput) return;
+      const nextRef = valIdx < GUESS_LETTER_FIELDS.length - 1 ? letterRefs[valIdx + 1] : btnRef;
+      if (value.length === 1) nextRef.current?.focus();
+    },
+    [btnRef, letterRefs],
+  );
 
   const handleReset = useCallback(
     (_event: SyntheticEvent<HTMLFormElement>) => {
       requestReset();
-      firstRef.current?.focus();
+      letterRefs[0].current?.focus();
     },
-    [requestReset],
+    [letterRefs, requestReset],
   );
 
   const handleSubmit = useCallback(
@@ -84,11 +91,15 @@ function GameForm() {
     <div className="GameForm">
       <form onSubmit={handleSubmit} onReset={handleReset} ref={formRef}>
         <div className="letters">
-          <LetterInput name="first" ref={firstRef} value={values[0]} onChange={onLetterChange} />
-          <LetterInput name="second" ref={secondRef} value={values[1]} onChange={onLetterChange} />
-          <LetterInput name="third" ref={thirdRef} value={values[2]} onChange={onLetterChange} />
-          <LetterInput name="fourth" ref={fourthRef} value={values[3]} onChange={onLetterChange} />
-          <LetterInput name="fifth" ref={fifthRef} value={values[4]} onChange={onLetterChange} />
+          {GUESS_LETTER_FIELDS.map((field, idx) => (
+            <LetterInput
+              key={field}
+              name={field}
+              ref={letterRefs[idx]}
+              value={values[idx]}
+              onChange={onLetterChange}
+            />
+          ))}
         </div>
         <div className="buttons">
           <button type="reset">Clear</button>

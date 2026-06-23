@@ -1,13 +1,18 @@
 import { ChangeEvent, useCallback, useMemo, type MouseEvent } from 'react';
 
 import { useGameContext } from '../../Providers/GameContext';
-import { SCORING_METRIC, type ScoringMetric } from '../../Providers/providerTypes';
+import {
+  SCORING_METRIC,
+  SCORING_MODE,
+  type ScoringMetric,
+  type ScoringMode,
+} from '../../Providers/providerTypes';
 
 import './Choices.scss';
 
-function formatScore(score: number, metric: ScoringMetric, scoringMode: 'probe' | 'solve'): string {
+function formatScore(score: number, metric: ScoringMetric, scoringMode: ScoringMode): string {
   if (Number.isNaN(score)) return '';
-  if (scoringMode === 'solve') return '';
+  if (scoringMode === SCORING_MODE.SOLVE) return '';
   if (metric === SCORING_METRIC.EXPECTED_REMAINING) {
     return ` (~${Math.round(score).toString()} left)`;
   }
@@ -36,7 +41,7 @@ function Choices() {
   );
 
   const modeLabel = useMemo(() => {
-    if (scoringMode === 'solve') {
+    if (scoringMode === SCORING_MODE.SOLVE) {
       return `Solve mode (${remainingAnswerCount.toString()} answer${remainingAnswerCount === 1 ? '' : 's'} left)`;
     }
     return 'Probe mode';
@@ -55,7 +60,7 @@ function Choices() {
       const { value } = event.target;
       const isScoringMetric = (candidate: unknown): candidate is ScoringMetric => {
         if (typeof candidate !== 'string') return false;
-        return Object.values(SCORING_METRIC).includes(candidate);
+        return Object.values(SCORING_METRIC).map(String).includes(candidate);
       };
       const nextMetric = isScoringMetric(value) ? value : null;
       if (nextMetric === null) return;
@@ -68,14 +73,14 @@ function Choices() {
     <div className="choices-wrapper">
       <div className="choices-controls">
         <p className="choices-mode">{modeLabel}</p>
-        {scoringMode === 'probe' && (
+        {scoringMode === SCORING_MODE.PROBE && (
           <fieldset className="choices-metric">
             <legend>Score by</legend>
             <label>
               <input
                 type="radio"
                 name="scoring-metric"
-                value="entropy"
+                value={SCORING_METRIC.ENTROPY}
                 checked={scoringMetric === SCORING_METRIC.ENTROPY}
                 onChange={handleScoringMetricChange}
               />
@@ -85,7 +90,7 @@ function Choices() {
               <input
                 type="radio"
                 name="scoring-metric"
-                value="expectedRemaining"
+                value={SCORING_METRIC.EXPECTED_REMAINING}
                 checked={scoringMetric === SCORING_METRIC.EXPECTED_REMAINING}
                 onChange={handleScoringMetricChange}
               />

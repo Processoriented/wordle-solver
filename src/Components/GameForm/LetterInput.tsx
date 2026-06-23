@@ -11,9 +11,12 @@ import {
 
 import {
   GuessLetter,
+  GUESS_LETTER_FIELDS,
+  guessLetterResultField,
   LetterInputValue,
   LETTER_RESULT,
   LetterResult,
+  type GuessLetterField,
 } from '../../Providers/providerTypes';
 import { useGameContext } from '../../Providers/GameContext';
 import './LetterInput.scss';
@@ -24,7 +27,7 @@ interface Props {
   ref?: Ref<HTMLInputElement>;
   defaultValue?: LetterInputValue;
   disabled?: boolean;
-  name?: string;
+  name?: GuessLetterField;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   value?: LetterInputValue;
 }
@@ -33,7 +36,7 @@ function LetterInput({
   ref,
   defaultValue = dfltVal,
   disabled = false,
-  name = '',
+  name,
   onChange = () => undefined,
   value: propVal,
 }: Props) {
@@ -44,7 +47,8 @@ function LetterInput({
   const inputRef = ref ?? localRef;
 
   const letterIdx = useMemo(() => {
-    return ['first', 'second', 'third', 'fourth', 'fifth'].indexOf(name);
+    if (!name) return -1;
+    return GUESS_LETTER_FIELDS.indexOf(name);
   }, [name]);
 
   const previousValResults = useMemo(() => {
@@ -121,7 +125,7 @@ function LetterInput({
   }, [disabled, handleChange, value]);
 
   const hiddenProps = useMemo(() => {
-    const always = { name: `${name}Result` };
+    const always = { name: name ? guessLetterResultField(name) : undefined };
     return disabled ? { ...always, defaultValue: value[1] } : { ...always, value: value[1] };
   }, [disabled, name, value]);
 
