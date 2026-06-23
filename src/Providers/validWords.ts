@@ -14855,5 +14855,3 @@ export const validWords = [
   'zymes',
   'zymic',
 ];
-
-export { scored } from './validWords.scored';

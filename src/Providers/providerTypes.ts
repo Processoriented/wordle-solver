@@ -6,6 +6,8 @@ export type SubmitEvent = React.FormEvent<HTMLFormElement>;
 export type LetterResult = "placed" | "misplaced" | "incorrect" | "none";
 export type LetterInputValue = [string, LetterResult];
 export type positionObj = { solution: string, misplaced: string[] };
+export type ScoringMetric = 'entropy' | 'expectedRemaining';
+export type ScoringMode = 'probe' | 'solve';
 
 export class GuessLetter {
   letter: string;
@@ -51,4 +53,8 @@ export interface GameContextInterface {
   requestReset: () => void;
   selectedChoice: string;
   setSelectedChoice: (choice: string) => void;
+  scoringMetric: ScoringMetric;
+  setScoringMetric: (metric: ScoringMetric) => void;
+  scoringMode: ScoringMode;
+  remainingAnswerCount: number;
 }
