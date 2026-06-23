@@ -1,7 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { GameContext } from './GameContext';
-import { Guess, LetterResult, ScoringMetric, ScoringMode, SubmitEvent } from './providerTypes';
+import {
+  Guess,
+  LETTER_RESULT,
+  type LetterResult,
+  SCORING_METRIC,
+  type ScoringMetric,
+  type ScoringMode,
+  type SubmitEvent,
+} from './providerTypes';
 import { validWords as allValidWords } from './validWords';
 import { scoredEntropy, scoredExpectedRemaining } from './validWords.scored';
 import {
@@ -17,11 +25,12 @@ const SCORING_METRIC_STORAGE_KEY = 'wordle-scoring-metric';
 function loadScoringMetric(): ScoringMetric {
   try {
     const stored = localStorage.getItem(SCORING_METRIC_STORAGE_KEY);
-    if (stored === 'entropy' || stored === 'expectedRemaining') return stored;
+    if (stored === SCORING_METRIC.ENTROPY || stored === SCORING_METRIC.EXPECTED_REMAINING)
+      return stored;
   } catch {
     // localStorage unavailable in some test environments
   }
-  return 'entropy';
+  return SCORING_METRIC.ENTROPY;
 }
 
 function getFormString(formData: FormData, key: string, fallback = ''): string {
@@ -51,13 +60,13 @@ export default function GameProvider({ children }) {
     const [s1, s2, s3, s4, s5] = names.map((name) => getFormString(formValues, name));
     const results: LetterResult[] = names
       .map((name) => `${name}Result`)
-      .map((name) => getFormString(formValues, name, 'none') as LetterResult)
-      .map((r) => (r === 'none' ? 'incorrect' : r));
+      .map((name) => getFormString(formValues, name, LETTER_RESULT.NONE) as LetterResult)
+      .map((r) => (r === LETTER_RESULT.NONE ? LETTER_RESULT.INCORRECT : r));
     const word = [s1, s2, s3, s4, s5].join('');
     if (!(typeof word === 'string' && word.length === 5)) return `Invalid word ${word}`;
     if (results.length !== 5) return `Invalid results ${results.join(', ')}`;
     const noneIndices = results
-      .map((result, idx) => (result === 'none' ? word[idx] : null))
+      .map((result, idx) => (result === LETTER_RESULT.NONE ? word[idx] : null))
       .filter(Boolean);
     if (noneIndices.length) return `Missing results for '${noneIndices.join(', ')}'`;
     const guess = new Guess(word, results);
@@ -111,7 +120,8 @@ export default function GameProvider({ children }) {
     }
 
     if (!(Array.isArray(guesses) && guesses.length > 0)) {
-      const baseline = scoringMetric === 'entropy' ? scoredEntropy : scoredExpectedRemaining;
+      const baseline =
+        scoringMetric === SCORING_METRIC.ENTROPY ? scoredEntropy : scoredExpectedRemaining;
       return guessPool
         .map((word) => [word, baseline[word] ?? 0] as [string, number])
         .sort(([, a], [, b]) => compareScores(a, b, scoringMetric));

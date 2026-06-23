@@ -1,7 +1,7 @@
 import type { SubmitEvent as ReactSubmitEvent } from 'react';
 
 import { feedbackMatches } from './wordleScore';
-import { LetterInputValue, LetterResult } from './letterTypes';
+import { LETTER_RESULT, type LetterInputValue, type LetterResult } from './letterTypes';
 
 export { LETTER_RESULT, type LetterInputValue, type LetterResult } from './letterTypes';
 export interface positionObj {
@@ -9,7 +9,11 @@ export interface positionObj {
   misplaced: string[];
 }
 export type SubmitEvent = ReactSubmitEvent<HTMLFormElement>;
-export type ScoringMetric = 'entropy' | 'expectedRemaining';
+export const SCORING_METRIC = {
+  ENTROPY: 'entropy',
+  EXPECTED_REMAINING: 'expectedRemaining',
+};
+export type ScoringMetric = (typeof SCORING_METRIC)[keyof typeof SCORING_METRIC];
 export type ScoringMode = 'probe' | 'solve';
 
 export class GuessLetter {
@@ -30,7 +34,7 @@ export class Guess {
   constructor(attempt: string, results: LetterResult[]) {
     this.letters = attempt
       .split('')
-      .map((letter, idx) => new GuessLetter(letter, results[idx] ?? 'none', idx));
+      .map((letter, idx) => new GuessLetter(letter, results[idx] ?? LETTER_RESULT.NONE, idx));
   }
 
   get word() {

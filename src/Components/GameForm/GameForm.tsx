@@ -11,7 +11,7 @@ import { useGameContext } from '../../Providers/GameContext';
 
 import './GameForm.scss';
 import LetterInput from './LetterInput';
-import { LetterInputValue } from '../../Providers/providerTypes';
+import { LETTER_RESULT, type LetterInputValue } from '../../Providers/letterTypes';
 
 function GameForm() {
   const { onGuessSubmit, requestReset, selectedChoice } = useGameContext();
@@ -34,7 +34,7 @@ function GameForm() {
       (prev) =>
         [
           ...prev.slice(0, valIdx),
-          validInput ? [value, 'none'] : ['', 'none'],
+          validInput ? [value, LETTER_RESULT.NONE] : ['', LETTER_RESULT.NONE],
           ...prev.slice(valIdx + 1),
         ] as LetterInputValue[],
     );
@@ -74,7 +74,9 @@ function GameForm() {
     if (typeof selectedChoice !== 'string' || selectedChoice.length !== 5) return;
     setValues((prev) => {
       if (Array.isArray(prev) && prev.length === 5) return prev;
-      return [...selectedChoice].map((letter) => [letter, 'none'] as LetterInputValue);
+      return selectedChoice
+        .split('')
+        .map((letter) => [letter, LETTER_RESULT.NONE] as LetterInputValue);
     });
   }, [selectedChoice]);
 

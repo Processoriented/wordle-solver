@@ -1,15 +1,15 @@
-import { useCallback, useMemo, type MouseEvent } from 'react';
+import { ChangeEvent, useCallback, useMemo, type MouseEvent } from 'react';
 
 import { useGameContext } from '../../Providers/GameContext';
-import { ScoringMetric } from '../../Providers/providerTypes';
+import { SCORING_METRIC, type ScoringMetric } from '../../Providers/providerTypes';
 
 import './Choices.scss';
 
 function formatScore(score: number, metric: ScoringMetric, scoringMode: 'probe' | 'solve'): string {
-  if (isNaN(score)) return '';
+  if (Number.isNaN(score)) return '';
   if (scoringMode === 'solve') return '';
-  if (metric === 'expectedRemaining') {
-    return ` (~${Math.round(score)} left)`;
+  if (metric === SCORING_METRIC.EXPECTED_REMAINING) {
+    return ` (~${Math.round(score).toString()} left)`;
   }
   return ` (${score.toFixed(2)})`;
 }
@@ -37,7 +37,7 @@ function Choices() {
 
   const modeLabel = useMemo(() => {
     if (scoringMode === 'solve') {
-      return `Solve mode (${remainingAnswerCount} answer${remainingAnswerCount === 1 ? '' : 's'} left)`;
+      return `Solve mode (${remainingAnswerCount.toString()} answer${remainingAnswerCount === 1 ? '' : 's'} left)`;
     }
     return 'Probe mode';
   }, [remainingAnswerCount, scoringMode]);
@@ -49,6 +49,20 @@ function Choices() {
       handleClick: mkHandler(word),
     }));
   }, [mkHandler, scoredWords, scoringMetric, scoringMode]);
+
+  const handleScoringMetricChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const { value } = event.target;
+      const isScoringMetric = (candidate: unknown): candidate is ScoringMetric => {
+        if (typeof candidate !== 'string') return false;
+        return Object.values(SCORING_METRIC).includes(candidate);
+      };
+      const nextMetric = isScoringMetric(value) ? value : null;
+      if (nextMetric === null) return;
+      setScoringMetric(nextMetric);
+    },
+    [setScoringMetric],
+  );
 
   return (
     <div className="choices-wrapper">
@@ -62,8 +76,8 @@ function Choices() {
                 type="radio"
                 name="scoring-metric"
                 value="entropy"
-                checked={scoringMetric === 'entropy'}
-                onChange={() => setScoringMetric('entropy')}
+                checked={scoringMetric === SCORING_METRIC.ENTROPY}
+                onChange={handleScoringMetricChange}
               />
               Entropy (bits)
             </label>
@@ -72,15 +86,15 @@ function Choices() {
                 type="radio"
                 name="scoring-metric"
                 value="expectedRemaining"
-                checked={scoringMetric === 'expectedRemaining'}
-                onChange={() => setScoringMetric('expectedRemaining')}
+                checked={scoringMetric === SCORING_METRIC.EXPECTED_REMAINING}
+                onChange={handleScoringMetricChange}
               />
               Expected remaining
             </label>
           </fieldset>
         )}
       </div>
-      <p>{`Choices (${scoredWords.length}):`}</p>
+      <p>{`Choices (${scoredWords.length.toString()}):`}</p>
       <div className="choice-list">
         {wordList.map(({ key, label, handleClick }) => (
           <button key={key} type="button" onClick={handleClick} className="word">

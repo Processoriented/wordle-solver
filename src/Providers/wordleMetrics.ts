@@ -1,18 +1,16 @@
 import { feedbackPattern } from './wordleScore';
+import { SCORING_METRIC, type ScoringMetric } from './providerTypes';
 
-export type ScoringMetric = 'entropy' | 'expectedRemaining';
+export { SCORING_METRIC, type ScoringMetric } from './providerTypes';
 
 export const SOLVE_MODE_THRESHOLD = 5;
 
 export function getOutcomes(guess: string, answers: string[]): Record<string, number> {
-  return answers.reduce(
-    (acc, word) => {
-      const pattern = feedbackPattern(guess, word);
-      acc[pattern] = (acc[pattern] ?? 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
+  return answers.reduce<Record<string, number>>((acc, word) => {
+    const pattern = feedbackPattern(guess, word);
+    acc[pattern] = (acc[pattern] ?? 0) + 1;
+    return acc;
+  }, {});
 }
 
 export function groupByPattern(guess: string, answers: string[]): Map<string, string[]> {
@@ -47,20 +45,20 @@ export function scoreFromOutcomes(
   total: number,
   metric: ScoringMetric,
 ): number {
-  return metric === 'entropy'
+  return metric === SCORING_METRIC.ENTROPY
     ? shannonEntropy(outcomes, total)
     : expectedRemaining(outcomes, total);
 }
 
 export function scoreGuess(guess: string, answers: string[], metric: ScoringMetric): number {
   if (answers.length === 0) {
-    return metric === 'entropy' ? 0 : Infinity;
+    return metric === SCORING_METRIC.ENTROPY ? 0 : Infinity;
   }
   return scoreFromOutcomes(getOutcomes(guess, answers), answers.length, metric);
 }
 
 export function compareScores(a: number, b: number, metric: ScoringMetric): number {
-  return metric === 'entropy' ? b - a : a - b;
+  return metric === SCORING_METRIC.ENTROPY ? b - a : a - b;
 }
 
 export function twoStepScore(
@@ -71,7 +69,7 @@ export function twoStepScore(
 ): number {
   const total = answers.length;
   if (total === 0) {
-    return metric === 'entropy' ? 0 : Infinity;
+    return metric === SCORING_METRIC.ENTROPY ? 0 : Infinity;
   }
 
   const buckets = groupByPattern(guess, answers);
@@ -79,11 +77,11 @@ export function twoStepScore(
 
   for (const bucket of buckets.values()) {
     const prob = bucket.length / total;
-    let best = metric === 'entropy' ? -Infinity : Infinity;
+    let best = metric === SCORING_METRIC.ENTROPY ? -Infinity : Infinity;
 
     for (const secondGuess of guessPool) {
       const bucketScore = scoreGuess(secondGuess, bucket, metric);
-      if (metric === 'entropy') {
+      if (metric === SCORING_METRIC.ENTROPY) {
         best = Math.max(best, bucketScore);
       } else {
         best = Math.min(best, bucketScore);
@@ -102,21 +100,18 @@ export function positionalFrequencyScore(
 ): number {
   return word
     .split('')
-    .map((letter, idx) => frequencies[idx]?.[letter] ?? 0)
+    .map((letter, idx) => frequencies[idx][letter] ?? 0)
     .reduce((sum, freq) => sum + freq, 0);
 }
 
 export function buildPositionalFrequencies(
   answers: string[],
 ): Record<number, Record<string, number>> {
-  return answers.reduce(
-    (acc, word) => {
-      word.split('').forEach((letter, idx) => {
-        acc[idx] = acc[idx] ?? {};
-        acc[idx][letter] = (acc[idx][letter] ?? 0) + 1;
-      });
-      return acc;
-    },
-    [] as Record<number, Record<string, number>>,
-  );
+  return answers.reduce<Record<number, Record<string, number>>>((acc, word) => {
+    word.split('').forEach((letter, idx) => {
+      acc[idx] = acc[idx] ?? {};
+      acc[idx][letter] = (acc[idx][letter] ?? 0) + 1;
+    });
+    return acc;
+  }, []);
 }

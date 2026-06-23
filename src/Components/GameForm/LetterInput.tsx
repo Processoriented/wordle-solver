@@ -18,7 +18,7 @@ import {
 import { useGameContext } from '../../Providers/GameContext';
 import './LetterInput.scss';
 
-const dfltVal: LetterInputValue = ['', 'none'];
+const dfltVal: LetterInputValue = ['', LETTER_RESULT.NONE];
 
 interface Props {
   ref?: Ref<HTMLInputElement>;
@@ -50,7 +50,7 @@ function LetterInput({
   const previousValResults = useMemo(() => {
     if (!(Array.isArray(guesses) && guesses.length > 0)) return {};
     return guesses
-      .filter((guess) => Array.isArray(guess?.letters) && guess.letters.length > letterIdx)
+      .filter((guess) => Array.isArray(guess.letters) && guess.letters.length > letterIdx)
       .map(({ letters }) => letters[letterIdx])
       .filter((letter) => letter instanceof GuessLetter)
       .reduce((acc, { letter, result }) => ({ ...acc, [letter]: result }), {});
@@ -66,9 +66,9 @@ function LetterInput({
     if (typeof propVal === 'undefined') return;
     const [val, rawResult] = propVal;
     const result =
-      rawResult !== 'none'
+      rawResult !== LETTER_RESULT.NONE
         ? rawResult
-        : ((previousValResults[val] as LetterResult | undefined) ?? 'none');
+        : ((previousValResults[val] as LetterResult | undefined) ?? LETTER_RESULT.NONE);
     const nextValue = [val, result] as LetterInputValue;
     setValue(nextValue);
   }, [name, previousValResults, propVal]);

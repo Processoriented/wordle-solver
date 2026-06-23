@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { GameContextInterface } from './providerTypes';
+import { GameContextInterface, SCORING_METRIC } from './providerTypes';
 
 const mtObj: GameContextInterface = {
   allValidWords: [],
@@ -11,7 +11,7 @@ const mtObj: GameContextInterface = {
   requestReset: () => undefined,
   selectedChoice: '',
   setSelectedChoice: () => undefined,
-  scoringMetric: 'entropy',
+  scoringMetric: SCORING_METRIC.ENTROPY,
   setScoringMetric: () => undefined,
   scoringMode: 'probe',
   remainingAnswerCount: 0,
