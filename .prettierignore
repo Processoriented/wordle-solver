@@ -1,0 +1,5 @@
+dist/
+coverage/
+node_modules/
+src/Providers/validWords.scored.ts
+src/Providers/validWords.scored.legacy.ts

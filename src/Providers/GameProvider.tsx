@@ -1,132 +1,169 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { GameContextInterface, Guess, LetterResult } from './providerTypes';
-import { validWords as allValidWords, scored } from './validWords';
+import { GameContext } from './GameContext';
+import { Guess, LetterResult, ScoringMetric, ScoringMode, SubmitEvent } from './providerTypes';
+import { validWords as allValidWords } from './validWords';
+import { scoredEntropy, scoredExpectedRemaining } from './validWords.scored';
+import {
+  buildPositionalFrequencies,
+  compareScores,
+  positionalFrequencyScore,
+  scoreGuess,
+  SOLVE_MODE_THRESHOLD,
+} from './wordleMetrics';
 
+const SCORING_METRIC_STORAGE_KEY = 'wordle-scoring-metric';
 
-const mtObj: GameContextInterface = {
-  allValidWords: [],
-  currentValidWords: [],
-  scoredWords: [],
-  guesses: [],
-  onGuessSubmit: () => null,
-  resetTime: Date.now(),
-  requestReset: () => {},
-  selectedChoice: '',
-  setSelectedChoice: () => {},
-};
+function loadScoringMetric(): ScoringMetric {
+  try {
+    const stored = localStorage.getItem(SCORING_METRIC_STORAGE_KEY);
+    if (stored === 'entropy' || stored === 'expectedRemaining') return stored;
+  } catch {
+    // localStorage unavailable in some test environments
+  }
+  return 'entropy';
+}
 
-const GameContext = createContext<GameContextInterface>(mtObj);
-
-export function useGameContext() { return useContext(GameContext); }
+function getFormString(formData: FormData, key: string, fallback = ''): string {
+  const entry = formData.get(key);
+  return typeof entry === 'string' ? entry : fallback;
+}
 
 export default function GameProvider({ children }) {
   const [guesses, setGuesses] = useState<Guess[]>([]);
-  const [resetTime, setResetTime] = useState<number>(Date.now());
+  const [resetTime, setResetTime] = useState<number>(() => Date.now());
   const [selectedChoice, setSelectedChoice] = useState<string>('');
+  const [scoringMetric, setScoringMetricState] = useState<ScoringMetric>(loadScoringMetric);
 
-  const onGuessSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
+  const setScoringMetric = useCallback((metric: ScoringMetric) => {
+    setScoringMetricState(metric);
+    try {
+      localStorage.setItem(SCORING_METRIC_STORAGE_KEY, metric);
+    } catch {
+      // localStorage unavailable in some test environments
+    }
+  }, []);
+
+  const onGuessSubmit = useCallback((event: SubmitEvent) => {
     event.preventDefault();
-    const formValues = new FormData(event.target as HTMLFormElement);
+    const formValues = new FormData(event.target);
     const names = ['first', 'second', 'third', 'fourth', 'fifth'];
-    const [s1, s2, s3, s4, s5] = names.map((name) => `${formValues.get(name) ?? ''}`);
-    const results: LetterResult[] = names.map((name) => `${name}Result`)
-      .map((name) => `${formValues.get(name) ?? 'none'}` as LetterResult)
-      .map((r) => r === 'none' ? 'incorrect': r);
+    const [s1, s2, s3, s4, s5] = names.map((name) => getFormString(formValues, name));
+    const results: LetterResult[] = names
+      .map((name) => `${name}Result`)
+      .map((name) => getFormString(formValues, name, 'none') as LetterResult)
+      .map((r) => (r === 'none' ? 'incorrect' : r));
     const word = [s1, s2, s3, s4, s5].join('');
     if (!(typeof word === 'string' && word.length === 5)) return `Invalid word ${word}`;
     if (results.length !== 5) return `Invalid results ${results.join(', ')}`;
-    const noneIndices = results.map((result, idx) => result === 'none' ? word[idx] : null)
+    const noneIndices = results
+      .map((result, idx) => (result === 'none' ? word[idx] : null))
       .filter(Boolean);
     if (noneIndices.length) return `Missing results for '${noneIndices.join(', ')}'`;
     const guess = new Guess(word, results);
-    setGuesses(prev => ([...prev, guess]));
-    setSelectedChoice(prev => word === prev ? '' : prev);
+    setGuesses((prev) => [...prev, guess]);
+    setSelectedChoice((prev) => (word === prev ? '' : prev));
     return null;
   }, []);
 
-  const currentValidWords = useMemo(() => {
+  const guessedWords = useMemo(
+    () => new Set(guesses.map((guess) => guess.word.toLowerCase())),
+    [guesses],
+  );
+
+  const remainingAnswers = useMemo(() => {
     if (!(Array.isArray(guesses) && guesses.length > 0)) return allValidWords;
-    const words = guesses.reduce((acc, guess) => {
-      const next = acc.filter(word => guess.testWord(word));
-      return next;
+    return guesses.reduce((acc, guess) => {
+      return acc.filter((word) => guess.testWord(word));
     }, allValidWords);
-    return words;
   }, [guesses]);
-  
-  const scoredWords = useMemo(() => {
-    const getOutcomes = (testWord: string) => currentValidWords.reduce((acc, word) => {
-      const pattern = word.split('').map((letter, idx) => {
-        if (letter === testWord[idx]) return 'C';
-        if (testWord.includes(letter)) return 'M';
-        return 'W';
-      }).join('');
-      acc[pattern] = acc[pattern] ? acc[pattern] + 1 : 1;
-      return acc;
-    }, {} as { [key: string]: number });
-    const info = (!(Array.isArray(guesses) && guesses.length > 0)) ? scored : currentValidWords.reduce((acc, word) => {
-      const outcomes = getOutcomes(word);
-      const probabilities = (Object.entries(outcomes) as [string, number][]).reduce((acc, [outcome, count]) => {
-        acc[outcome] = count / currentValidWords.length;
-        return acc;
-      }, {} as { [key: string]: number });
-      const information = (Object.entries(probabilities) as [string, number][]).reduce((acc, [key, prob]) => {
-        acc[key] = prob * Math.log2((1 / prob));
-        return acc;
-      }, {} as { [key: string]: number });
-      const entropy = Object.values(information).reduce((acc, info) => acc + info, 0);
-      acc[word] = entropy;
-      return acc;
-    }, {} as { [key: string]: number });
-    return (Object.entries(info) as [string, number][]).sort(([, a], [, b]) => b - a);
-  }, [currentValidWords, guesses])
 
+  const guessPool = useMemo(() => {
+    const basePool = guesses.length === 0 ? allValidWords : remainingAnswers;
+    return basePool.filter((word) => !guessedWords.has(word.toLowerCase()));
+  }, [guesses.length, remainingAnswers, guessedWords]);
 
-  const positionalLetterFrequencies = useMemo(() => {
-    const frequencies = currentValidWords.reduce((acc, word) => {
-      const letters = word.split('');
-      letters.forEach((letter, idx) => {
-        acc[idx] = acc[idx] ?? {};
-        acc[idx][letter] = acc[idx][letter] ? acc[idx][letter] + 1 : 1;
-      });
-      return acc;
-    }, [] as { [key: number]: { [key: string]: number } });
-    return frequencies;
-  }, [currentValidWords]);
+  const remainingAnswerCount = remainingAnswers.length;
+  const scoringMode: ScoringMode =
+    remainingAnswerCount <= SOLVE_MODE_THRESHOLD && guesses.length > 0 ? 'solve' : 'probe';
 
-  const rankedValidWords = useMemo(() => {
-    return currentValidWords
-      .map(word => {
-        const letters = word.split('');
-        const score = letters
-          .map((letter, idx) => positionalLetterFrequencies[idx][letter])
-          .reduce((acc, freq) => acc + freq, 0);
-        return { word, score };
-      })
+  const positionalLetterFrequencies = useMemo(
+    () => buildPositionalFrequencies(remainingAnswers),
+    [remainingAnswers],
+  );
+
+  const rankedAnswers = useMemo(() => {
+    return remainingAnswers
+      .map((word) => ({
+        word,
+        score: positionalFrequencyScore(word, positionalLetterFrequencies),
+      }))
       .sort((a, b) => b.score - a.score)
       .map(({ word }) => word);
-  }, [currentValidWords, positionalLetterFrequencies]);
+  }, [remainingAnswers, positionalLetterFrequencies]);
+
+  const scoredWords = useMemo(() => {
+    if (scoringMode === 'solve') {
+      return rankedAnswers.map(
+        (word) =>
+          [word, positionalFrequencyScore(word, positionalLetterFrequencies)] as [string, number],
+      );
+    }
+
+    if (!(Array.isArray(guesses) && guesses.length > 0)) {
+      const baseline = scoringMetric === 'entropy' ? scoredEntropy : scoredExpectedRemaining;
+      return guessPool
+        .map((word) => [word, baseline[word] ?? 0] as [string, number])
+        .sort(([, a], [, b]) => compareScores(a, b, scoringMetric));
+    }
+
+    return guessPool
+      .map((word) => [word, scoreGuess(word, remainingAnswers, scoringMetric)] as [string, number])
+      .sort(([, a], [, b]) => compareScores(a, b, scoringMetric));
+  }, [
+    guessPool,
+    guesses,
+    positionalLetterFrequencies,
+    rankedAnswers,
+    remainingAnswers,
+    scoringMetric,
+    scoringMode,
+  ]);
 
   const requestReset = useCallback(() => {
     setResetTime(Date.now());
   }, []);
-  
-  const provided = useMemo(() => ({
-    allValidWords,
-    currentValidWords: rankedValidWords,
-    guesses,
-    onGuessSubmit,
-    requestReset,
-    resetTime,
-    scoredWords,
-    selectedChoice,
-    setSelectedChoice,
-  }), [guesses, onGuessSubmit, rankedValidWords, requestReset,
-    resetTime, scoredWords, selectedChoice, setSelectedChoice]);
 
-  return (
-    <GameContext.Provider value={provided}>
-      {children}
-    </GameContext.Provider>
+  const provided = useMemo(
+    () => ({
+      allValidWords,
+      currentValidWords: rankedAnswers,
+      guesses,
+      onGuessSubmit,
+      requestReset,
+      resetTime,
+      scoredWords,
+      selectedChoice,
+      setSelectedChoice,
+      scoringMetric,
+      setScoringMetric,
+      scoringMode,
+      remainingAnswerCount,
+    }),
+    [
+      guesses,
+      onGuessSubmit,
+      rankedAnswers,
+      requestReset,
+      resetTime,
+      scoredWords,
+      scoringMetric,
+      scoringMode,
+      remainingAnswerCount,
+      selectedChoice,
+      setScoringMetric,
+    ],
   );
+
+  return <GameContext.Provider value={provided}>{children}</GameContext.Provider>;
 }

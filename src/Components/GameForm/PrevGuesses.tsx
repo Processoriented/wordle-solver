@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { useGameContext } from '../../Providers/GameProvider';
+import { useGameContext } from '../../Providers/GameContext';
 import LetterInput from './LetterInput';
-
 
 function PrevGuesses() {
   const { guesses } = useGameContext();

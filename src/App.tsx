@@ -1,5 +1,3 @@
-import React from 'react';
-
 import Choices from './Components/Choices/Choices';
 import GameForm from './Components/GameForm/GameForm';
 import GameProvider from './Providers/GameProvider';
@@ -20,7 +18,9 @@ function App() {
           <Choices />
         </main>
         <footer className="App-footer">
-          <p>Created by <a href="mailto://processoriented@gmail.com">Vincent Engler</a></p>
+          <p>
+            Created by <a href="mailto://processoriented@gmail.com">Vincent Engler</a>
+          </p>
         </footer>
       </div>
     </GameProvider>
