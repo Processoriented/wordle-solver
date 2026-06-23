@@ -9,7 +9,7 @@ import {
   type Ref,
 } from 'react';
 
-import { GuessLetter, LetterInputValue, LetterResult } from '../../Providers/providerTypes';
+import { GuessLetter, LetterInputValue, LETTER_RESULT, LetterResult } from '../../Providers/providerTypes';
 import { useGameContext } from '../../Providers/GameProvider';
 import './LetterInput.scss';
 
@@ -69,10 +69,10 @@ function LetterInput({
     const base = 'letter-input';
     const result = [...value].pop() as LetterResult;
     const resultClass = {
-      placed: 'letter-input--placed',
-      misplaced: 'letter-input--misplaced',
-      incorrect: 'letter-input--incorrect',
-      none: null,
+      [LETTER_RESULT.PLACED]: 'letter-input--placed',
+      [LETTER_RESULT.MISPLACED]: 'letter-input--misplaced',
+      [LETTER_RESULT.INCORRECT]: 'letter-input--incorrect',
+      [LETTER_RESULT.NONE]: null,
     }[result];
     return [base, resultClass].filter(Boolean).join(' ');
   }, [value]);
@@ -82,10 +82,10 @@ function LetterInput({
     setValue(([val, result]) => {
       if (!(typeof val === 'string' && val.length > 0)) return [val, result];
       const nextResult = {
-        placed: 'none',
-        misplaced: 'placed',
-        incorrect: 'misplaced',
-        none: 'incorrect',
+        [LETTER_RESULT.PLACED]: LETTER_RESULT.NONE,
+        [LETTER_RESULT.MISPLACED]: LETTER_RESULT.PLACED,
+        [LETTER_RESULT.INCORRECT]: LETTER_RESULT.MISPLACED,
+        [LETTER_RESULT.NONE]: LETTER_RESULT.MISPLACED,
       }[result] as LetterResult;
       return [val, nextResult];
     });

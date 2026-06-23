@@ -3,7 +3,7 @@ import type { SubmitEvent as ReactSubmitEvent } from 'react';
 import { feedbackMatches } from './wordleScore';
 import { LetterInputValue, LetterResult } from './letterTypes';
 
-export type { LetterInputValue, LetterResult } from './letterTypes';
+export { LETTER_RESULT, type LetterInputValue, type LetterResult } from './letterTypes';
 export type positionObj = { solution: string, misplaced: string[] };
 export type SubmitEvent = ReactSubmitEvent<HTMLFormElement>;
 export type ScoringMetric = 'entropy' | 'expectedRemaining';
