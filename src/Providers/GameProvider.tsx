@@ -5,6 +5,7 @@ import {
   Guess,
   LetterResult,
   ScoringMetric,
+  ScoringMode,
 } from './providerTypes';
 import { validWords as allValidWords } from './validWords';
 import { scoredEntropy, scoredExpectedRemaining } from './validWords.scored';
@@ -96,11 +97,12 @@ export default function GameProvider({ children }) {
   }, [guesses]);
 
   const guessPool = useMemo(() => {
-    return allValidWords.filter((word) => !guessedWords.has(word.toLowerCase()));
-  }, [guessedWords]);
+    const basePool = guesses.length === 0 ? allValidWords : remainingAnswers;
+    return basePool.filter((word) => !guessedWords.has(word.toLowerCase()));
+  }, [guesses.length, remainingAnswers, guessedWords]);
 
   const remainingAnswerCount = remainingAnswers.length;
-  const scoringMode = remainingAnswerCount <= SOLVE_MODE_THRESHOLD && guesses.length > 0
+  const scoringMode: ScoringMode = remainingAnswerCount <= SOLVE_MODE_THRESHOLD && guesses.length > 0
     ? 'solve'
     : 'probe';
 

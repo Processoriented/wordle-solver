@@ -1,4 +1,4 @@
-import { LetterResult } from './providerTypes';
+import { LetterResult } from './letterTypes';
 
 function normalize(word: string): string {
   return word.toLowerCase();
