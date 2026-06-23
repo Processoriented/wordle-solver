@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 
 import { GameContextInterface, Guess, LetterResult } from './providerTypes';
 import { validWords as allValidWords, scored } from './validWords';
+import { feedbackPattern } from './wordleScore';
 
 
 const mtObj: GameContextInterface = {
@@ -56,11 +57,7 @@ export default function GameProvider({ children }) {
   
   const scoredWords = useMemo(() => {
     const getOutcomes = (testWord: string) => currentValidWords.reduce((acc, word) => {
-      const pattern = word.split('').map((letter, idx) => {
-        if (letter === testWord[idx]) return 'C';
-        if (testWord.includes(letter)) return 'M';
-        return 'W';
-      }).join('');
+      const pattern = feedbackPattern(testWord, word);
       acc[pattern] = acc[pattern] ? acc[pattern] + 1 : 1;
       return acc;
     }, {} as { [key: string]: number });

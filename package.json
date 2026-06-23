@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "generate-scores": "tsx scripts/generate-scores.ts"
   },
   "dependencies": {
     "react": "^19.2.7",
@@ -24,6 +25,7 @@
     "@types/node": "^24.0.0",
     "@vitejs/plugin-react": "^4.5.2",
     "jsdom": "^26.1.0",
+    "tsx": "^4.20.3",
     "typescript": "^5.9.3",
     "vite": "^6.3.5",
     "vitest": "^3.2.4"
