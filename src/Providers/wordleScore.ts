@@ -7,7 +7,7 @@ function normalize(word: string): string {
 export function scoreGuess(guess: string, answer: string): LetterResult[] {
   const normalizedGuess = normalize(guess);
   const normalizedAnswer = normalize(answer);
-  const results: LetterResult[] = Array(5).fill('incorrect');
+  const results: LetterResult[] = Array.from({ length: 5 }, (): LetterResult => 'incorrect');
   const remaining = normalizedAnswer.split('');
 
   for (let i = 0; i < 5; i++) {
@@ -39,11 +39,7 @@ export function feedbackPattern(guess: string, answer: string): string {
     .join('');
 }
 
-export function feedbackMatches(
-  guess: string,
-  answer: string,
-  expected: LetterResult[],
-): boolean {
+export function feedbackMatches(guess: string, answer: string, expected: LetterResult[]): boolean {
   const results = scoreGuess(guess, answer);
   return results.every((result, idx) => result === expected[idx]);
 }

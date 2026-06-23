@@ -1,15 +1,11 @@
 import { useCallback, useMemo, type MouseEvent } from 'react';
 
-import { useGameContext } from '../../Providers/GameProvider';
+import { useGameContext } from '../../Providers/GameContext';
 import { ScoringMetric } from '../../Providers/providerTypes';
 
 import './Choices.scss';
 
-function formatScore(
-  score: number,
-  metric: ScoringMetric,
-  scoringMode: 'probe' | 'solve',
-): string {
+function formatScore(score: number, metric: ScoringMetric, scoringMode: 'probe' | 'solve'): string {
   if (isNaN(score)) return '';
   if (scoringMode === 'solve') return '';
   if (metric === 'expectedRemaining') {
@@ -28,13 +24,16 @@ function Choices() {
     remainingAnswerCount,
   } = useGameContext();
 
-  const mkHandler = useCallback((word: string) => {
-    return (event: MouseEvent<HTMLButtonElement>) => {
-      event.preventDefault();
-      if (!(typeof word === 'string' && word.length === 5)) return;
-      setSelectedChoice(word);
-    };
-  }, [setSelectedChoice]);
+  const mkHandler = useCallback(
+    (word: string) => {
+      return (event: MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        if (!(typeof word === 'string' && word.length === 5)) return;
+        setSelectedChoice(word);
+      };
+    },
+    [setSelectedChoice],
+  );
 
   const modeLabel = useMemo(() => {
     if (scoringMode === 'solve') {
@@ -82,9 +81,11 @@ function Choices() {
         )}
       </div>
       <p>{`Choices (${scoredWords.length}):`}</p>
-      <div className='choice-list'>
+      <div className="choice-list">
         {wordList.map(({ key, label, handleClick }) => (
-          <button key={key} type="button" onClick={handleClick} className='word'>{label}</button>
+          <button key={key} type="button" onClick={handleClick} className="word">
+            {label}
+          </button>
         ))}
       </div>
     </div>

@@ -47,10 +47,13 @@ function formatMap(name: string, scores: Record<string, number>): string {
 }
 
 function scoreAllWords(words: string[], metric: ScoringMetric): Record<string, number> {
-  return words.reduce((acc, word) => {
-    acc[word] = scoreGuess(word, words, metric);
-    return acc;
-  }, {} as Record<string, number>);
+  return words.reduce(
+    (acc, word) => {
+      acc[word] = scoreGuess(word, words, metric);
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 }
 
 const refineTop = parseRefineTop();
@@ -64,8 +67,8 @@ const secondGuessPool = topWordsByScore(scoredEntropy, 'entropy', secondGuessPoo
 const refineCandidates = topWordsByScore(scoredEntropy, 'entropy', refineTop);
 
 console.log(
-  `Refining top ${refineCandidates.length} words with 2-step entropy `
-  + `(second-guess pool: ${secondGuessPool.length})...`,
+  `Refining top ${refineCandidates.length} words with 2-step entropy ` +
+    `(second-guess pool: ${secondGuessPool.length})...`,
 );
 
 refineCandidates.forEach((word, index) => {
@@ -82,4 +85,6 @@ ${formatMap('scoredExpectedRemaining', scoredExpectedRemaining)}
 `;
 
 writeFileSync(outputPath, content);
-console.log(`Wrote ${Object.keys(scoredEntropy).length} entropy scores and ${Object.keys(scoredExpectedRemaining).length} expected-remaining scores to ${outputPath}`);
+console.log(
+  `Wrote ${Object.keys(scoredEntropy).length} entropy scores and ${Object.keys(scoredExpectedRemaining).length} expected-remaining scores to ${outputPath}`,
+);

@@ -1,13 +1,7 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import {
-  GameContextInterface,
-  Guess,
-  LetterResult,
-  ScoringMetric,
-  ScoringMode,
-  SubmitEvent,
-} from './providerTypes';
+import { GameContext } from './GameContext';
+import { Guess, LetterResult, ScoringMetric, ScoringMode, SubmitEvent } from './providerTypes';
 import { validWords as allValidWords } from './validWords';
 import { scoredEntropy, scoredExpectedRemaining } from './validWords.scored';
 import {
@@ -30,29 +24,14 @@ function loadScoringMetric(): ScoringMetric {
   return 'entropy';
 }
 
-const mtObj: GameContextInterface = {
-  allValidWords: [],
-  currentValidWords: [],
-  scoredWords: [],
-  guesses: [],
-  onGuessSubmit: () => null,
-  resetTime: Date.now(),
-  requestReset: () => {},
-  selectedChoice: '',
-  setSelectedChoice: () => {},
-  scoringMetric: 'entropy',
-  setScoringMetric: () => {},
-  scoringMode: 'probe',
-  remainingAnswerCount: 0,
-};
-
-const GameContext = createContext<GameContextInterface>(mtObj);
-
-export function useGameContext() { return useContext(GameContext); }
+function getFormString(formData: FormData, key: string, fallback = ''): string {
+  const entry = formData.get(key);
+  return typeof entry === 'string' ? entry : fallback;
+}
 
 export default function GameProvider({ children }) {
   const [guesses, setGuesses] = useState<Guess[]>([]);
-  const [resetTime, setResetTime] = useState<number>(Date.now());
+  const [resetTime, setResetTime] = useState<number>(() => Date.now());
   const [selectedChoice, setSelectedChoice] = useState<string>('');
   const [scoringMetric, setScoringMetricState] = useState<ScoringMetric>(loadScoringMetric);
 
@@ -67,21 +46,23 @@ export default function GameProvider({ children }) {
 
   const onGuessSubmit = useCallback((event: SubmitEvent) => {
     event.preventDefault();
-    const formValues = new FormData(event.target as HTMLFormElement);
+    const formValues = new FormData(event.target);
     const names = ['first', 'second', 'third', 'fourth', 'fifth'];
-    const [s1, s2, s3, s4, s5] = names.map((name) => `${formValues.get(name) ?? ''}`);
-    const results: LetterResult[] = names.map((name) => `${name}Result`)
-      .map((name) => `${formValues.get(name) ?? 'none'}` as LetterResult)
-      .map((r) => r === 'none' ? 'incorrect': r);
+    const [s1, s2, s3, s4, s5] = names.map((name) => getFormString(formValues, name));
+    const results: LetterResult[] = names
+      .map((name) => `${name}Result`)
+      .map((name) => getFormString(formValues, name, 'none') as LetterResult)
+      .map((r) => (r === 'none' ? 'incorrect' : r));
     const word = [s1, s2, s3, s4, s5].join('');
     if (!(typeof word === 'string' && word.length === 5)) return `Invalid word ${word}`;
     if (results.length !== 5) return `Invalid results ${results.join(', ')}`;
-    const noneIndices = results.map((result, idx) => result === 'none' ? word[idx] : null)
+    const noneIndices = results
+      .map((result, idx) => (result === 'none' ? word[idx] : null))
       .filter(Boolean);
     if (noneIndices.length) return `Missing results for '${noneIndices.join(', ')}'`;
     const guess = new Guess(word, results);
-    setGuesses(prev => ([...prev, guess]));
-    setSelectedChoice(prev => word === prev ? '' : prev);
+    setGuesses((prev) => [...prev, guess]);
+    setSelectedChoice((prev) => (word === prev ? '' : prev));
     return null;
   }, []);
 
@@ -93,7 +74,7 @@ export default function GameProvider({ children }) {
   const remainingAnswers = useMemo(() => {
     if (!(Array.isArray(guesses) && guesses.length > 0)) return allValidWords;
     return guesses.reduce((acc, guess) => {
-      return acc.filter(word => guess.testWord(word));
+      return acc.filter((word) => guess.testWord(word));
     }, allValidWords);
   }, [guesses]);
 
@@ -103,9 +84,8 @@ export default function GameProvider({ children }) {
   }, [guesses.length, remainingAnswers, guessedWords]);
 
   const remainingAnswerCount = remainingAnswers.length;
-  const scoringMode: ScoringMode = remainingAnswerCount <= SOLVE_MODE_THRESHOLD && guesses.length > 0
-    ? 'solve'
-    : 'probe';
+  const scoringMode: ScoringMode =
+    remainingAnswerCount <= SOLVE_MODE_THRESHOLD && guesses.length > 0 ? 'solve' : 'probe';
 
   const positionalLetterFrequencies = useMemo(
     () => buildPositionalFrequencies(remainingAnswers),
@@ -114,7 +94,7 @@ export default function GameProvider({ children }) {
 
   const rankedAnswers = useMemo(() => {
     return remainingAnswers
-      .map(word => ({
+      .map((word) => ({
         word,
         score: positionalFrequencyScore(word, positionalLetterFrequencies),
       }))
@@ -124,10 +104,10 @@ export default function GameProvider({ children }) {
 
   const scoredWords = useMemo(() => {
     if (scoringMode === 'solve') {
-      return rankedAnswers.map((word) => [
-        word,
-        positionalFrequencyScore(word, positionalLetterFrequencies),
-      ] as [string, number]);
+      return rankedAnswers.map(
+        (word) =>
+          [word, positionalFrequencyScore(word, positionalLetterFrequencies)] as [string, number],
+      );
     }
 
     if (!(Array.isArray(guesses) && guesses.length > 0)) {
@@ -154,37 +134,36 @@ export default function GameProvider({ children }) {
     setResetTime(Date.now());
   }, []);
 
-  const provided = useMemo(() => ({
-    allValidWords,
-    currentValidWords: rankedAnswers,
-    guesses,
-    onGuessSubmit,
-    requestReset,
-    resetTime,
-    scoredWords,
-    selectedChoice,
-    setSelectedChoice,
-    scoringMetric,
-    setScoringMetric,
-    scoringMode,
-    remainingAnswerCount,
-  }), [
-    guesses,
-    onGuessSubmit,
-    rankedAnswers,
-    requestReset,
-    resetTime,
-    scoredWords,
-    scoringMetric,
-    scoringMode,
-    remainingAnswerCount,
-    selectedChoice,
-    setScoringMetric,
-  ]);
-
-  return (
-    <GameContext.Provider value={provided}>
-      {children}
-    </GameContext.Provider>
+  const provided = useMemo(
+    () => ({
+      allValidWords,
+      currentValidWords: rankedAnswers,
+      guesses,
+      onGuessSubmit,
+      requestReset,
+      resetTime,
+      scoredWords,
+      selectedChoice,
+      setSelectedChoice,
+      scoringMetric,
+      setScoringMetric,
+      scoringMode,
+      remainingAnswerCount,
+    }),
+    [
+      guesses,
+      onGuessSubmit,
+      rankedAnswers,
+      requestReset,
+      resetTime,
+      scoredWords,
+      scoringMetric,
+      scoringMode,
+      remainingAnswerCount,
+      selectedChoice,
+      setScoringMetric,
+    ],
   );
+
+  return <GameContext.Provider value={provided}>{children}</GameContext.Provider>;
 }

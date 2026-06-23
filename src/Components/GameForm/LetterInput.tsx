@@ -9,27 +9,32 @@ import {
   type Ref,
 } from 'react';
 
-import { GuessLetter, LetterInputValue, LETTER_RESULT, LetterResult } from '../../Providers/providerTypes';
-import { useGameContext } from '../../Providers/GameProvider';
+import {
+  GuessLetter,
+  LetterInputValue,
+  LETTER_RESULT,
+  LetterResult,
+} from '../../Providers/providerTypes';
+import { useGameContext } from '../../Providers/GameContext';
 import './LetterInput.scss';
 
 const dfltVal: LetterInputValue = ['', 'none'];
 
-type Props = {
+interface Props {
   ref?: Ref<HTMLInputElement>;
   defaultValue?: LetterInputValue;
   disabled?: boolean;
   name?: string;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   value?: LetterInputValue;
-};
+}
 
 function LetterInput({
   ref,
   defaultValue = dfltVal,
   disabled = false,
   name = '',
-  onChange = () => {},
+  onChange = () => undefined,
   value: propVal,
 }: Props) {
   const { guesses, resetTime } = useGameContext();
@@ -52,15 +57,18 @@ function LetterInput({
   }, [guesses, letterIdx]);
 
   useEffect(() => {
-    if ((resetTime === resetRef.current) || disabled) return;
+    if (resetTime === resetRef.current || disabled) return;
     resetRef.current = Math.max(resetTime, resetRef.current);
     setValue(dfltVal);
   }, [disabled, resetTime]);
 
   useEffect(() => {
     if (typeof propVal === 'undefined') return;
-    let [val, result] = propVal;
-    result = (result !== 'none') ? result : previousValResults[val] ?? 'none';
+    const [val, rawResult] = propVal;
+    const result =
+      rawResult !== 'none'
+        ? rawResult
+        : ((previousValResults[val] as LetterResult | undefined) ?? 'none');
     const nextValue = [val, result] as LetterInputValue;
     setValue(nextValue);
   }, [name, previousValResults, propVal]);
@@ -91,18 +99,21 @@ function LetterInput({
     });
   }, []);
 
-  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    event.preventDefault();
-    const { value: nextLetter } = event.target;
-    setValue(([prev, result]) => {
-      const reportChange = ((prev !== nextLetter) && typeof onChange === 'function');
-      if (reportChange) onChange(event);
-      return [nextLetter, result];
-    });
-  }, [onChange]);
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      event.preventDefault();
+      const { value: nextLetter } = event.target;
+      setValue(([prev, result]) => {
+        const reportChange = prev !== nextLetter && typeof onChange === 'function';
+        if (reportChange) onChange(event);
+        return [nextLetter, result];
+      });
+    },
+    [onChange],
+  );
 
   const otherProps = useMemo(() => {
-    const readOnly = (disabled || (typeof value[0] === 'string' && value[0].length > 0));
+    const readOnly = disabled || (typeof value[0] === 'string' && value[0].length > 0);
     const always = { readOnly };
     return disabled
       ? { ...always, disabled, defaultValue: value[0] }
@@ -111,9 +122,7 @@ function LetterInput({
 
   const hiddenProps = useMemo(() => {
     const always = { name: `${name}Result` };
-    return disabled
-      ? { ...always, defaultValue: value[1] }
-      : { ...always, value: value[1] };
+    return disabled ? { ...always, defaultValue: value[1] } : { ...always, value: value[1] };
   }, [disabled, name, value]);
 
   return (

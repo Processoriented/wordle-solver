@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type SubmitEvent, type SyntheticEvent } from 'react';
-import { useGameContext } from '../../Providers/GameProvider';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type SubmitEvent,
+  type SyntheticEvent,
+} from 'react';
+import { useGameContext } from '../../Providers/GameContext';
 
 import './GameForm.scss';
 import LetterInput from './LetterInput';
@@ -19,40 +27,55 @@ function GameForm() {
 
   const onLetterChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    const validInput = (typeof value === 'string' && value.length > 0);
+    const validInput = typeof value === 'string' && value.length > 0;
     const valIdx = ['first', 'second', 'third', 'fourth', 'fifth'].indexOf(name);
     if (valIdx < 0) return;
-    setValues(prev => ([
-      ...prev.slice(0, valIdx),
-      validInput ? [value, 'none'] : ['', 'none'],
-      ...prev.slice(valIdx + 1)
-    ] as LetterInputValue[]));
-    if(!validInput) return;
-    const nextRef = { first: secondRef, second: thirdRef, third: fourthRef, fourth: fifthRef, fifth: btnRef }[name];
+    setValues(
+      (prev) =>
+        [
+          ...prev.slice(0, valIdx),
+          validInput ? [value, 'none'] : ['', 'none'],
+          ...prev.slice(valIdx + 1),
+        ] as LetterInputValue[],
+    );
+    if (!validInput) return;
+    const nextRef = {
+      first: secondRef,
+      second: thirdRef,
+      third: fourthRef,
+      fourth: fifthRef,
+      fifth: btnRef,
+    }[name];
     if (value.length === 1 && nextRef) nextRef.current?.focus();
   }, []);
 
-  const handleReset = useCallback((event: SyntheticEvent<HTMLFormElement>) => {
-    requestReset();
-    firstRef.current?.focus();
-  }, [requestReset]);
+  const handleReset = useCallback(
+    (_event: SyntheticEvent<HTMLFormElement>) => {
+      requestReset();
+      firstRef.current?.focus();
+    },
+    [requestReset],
+  );
 
-  const handleSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setValidityMessage(null);
-    const nextMsg = onGuessSubmit(event);
-    setValidityMessage(nextMsg);
-    if (typeof nextMsg === 'string' && nextMsg.length) return;
-    setValues([]);
-    formRef.current?.reset();
-  }, [onGuessSubmit]);
+  const handleSubmit = useCallback(
+    (event: SubmitEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      setValidityMessage(null);
+      const nextMsg = onGuessSubmit(event);
+      setValidityMessage(nextMsg);
+      if (typeof nextMsg === 'string' && nextMsg.length) return;
+      setValues([]);
+      formRef.current?.reset();
+    },
+    [onGuessSubmit],
+  );
 
   useEffect(() => {
     if (typeof selectedChoice !== 'string' || selectedChoice.length !== 5) return;
-    setValues(prev => {
+    setValues((prev) => {
       if (Array.isArray(prev) && prev.length === 5) return prev;
       return [...selectedChoice].map((letter) => [letter, 'none'] as LetterInputValue);
-    })
+    });
   }, [selectedChoice]);
 
   return (
@@ -67,7 +90,9 @@ function GameForm() {
         </div>
         <div className="buttons">
           <button type="reset">Clear</button>
-          <button type="submit" ref={btnRef}>Submit</button>
+          <button type="submit" ref={btnRef}>
+            Submit
+          </button>
         </div>
       </form>
       <p className="validity-display">{validityMessage}</p>

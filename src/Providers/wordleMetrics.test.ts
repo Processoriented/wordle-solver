@@ -46,8 +46,9 @@ describe('scoreGuess', () => {
     const outcomes = getOutcomes('raise', answers);
     expect(Object.values(outcomes).reduce((sum, count) => sum + count, 0)).toBe(answers.length);
     expect(scoreGuess('raise', answers, 'entropy')).toBe(shannonEntropy(outcomes, answers.length));
-    expect(scoreGuess('raise', answers, 'expectedRemaining'))
-      .toBe(expectedRemaining(outcomes, answers.length));
+    expect(scoreGuess('raise', answers, 'expectedRemaining')).toBe(
+      expectedRemaining(outcomes, answers.length),
+    );
   });
 });
 
@@ -57,13 +58,15 @@ describe('twoStepScore', () => {
   it('weights the best follow-up guess in each feedback bucket', () => {
     const firstGuess = 'raise';
     const manual = Array.from(
-      words.reduce((buckets, answer) => {
-        const pattern = feedbackPattern(firstGuess, answer);
-        const bucket = buckets.get(pattern) ?? [];
-        bucket.push(answer);
-        buckets.set(pattern, bucket);
-        return buckets;
-      }, new Map<string, string[]>()).entries(),
+      words
+        .reduce((buckets, answer) => {
+          const pattern = feedbackPattern(firstGuess, answer);
+          const bucket = buckets.get(pattern) ?? [];
+          bucket.push(answer);
+          buckets.set(pattern, bucket);
+          return buckets;
+        }, new Map<string, string[]>())
+        .entries(),
     ).reduce((total, [, bucket]) => {
       const best = Math.max(...words.map((word) => scoreGuess(word, bucket, 'entropy')));
       return total + (bucket.length / words.length) * best;

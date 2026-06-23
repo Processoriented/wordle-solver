@@ -4,7 +4,10 @@ import { feedbackMatches } from './wordleScore';
 import { LetterInputValue, LetterResult } from './letterTypes';
 
 export { LETTER_RESULT, type LetterInputValue, type LetterResult } from './letterTypes';
-export type positionObj = { solution: string, misplaced: string[] };
+export interface positionObj {
+  solution: string;
+  misplaced: string[];
+}
 export type SubmitEvent = ReactSubmitEvent<HTMLFormElement>;
 export type ScoringMetric = 'entropy' | 'expectedRemaining';
 export type ScoringMode = 'probe' | 'solve';
@@ -25,21 +28,26 @@ export class Guess {
   letters: GuessLetter[];
 
   constructor(attempt: string, results: LetterResult[]) {
-    this.letters = attempt.split('')
-      .map((letter, idx) => new GuessLetter(letter, results[idx] ?? "none", idx));
+    this.letters = attempt
+      .split('')
+      .map((letter, idx) => new GuessLetter(letter, results[idx] ?? 'none', idx));
   }
 
   get word() {
-    return this.letters.map(letter => letter.letter).join('');
+    return this.letters.map((letter) => letter.letter).join('');
   }
 
   testWord(word: string) {
     if (word === this.word) return false;
-    return feedbackMatches(this.word, word, this.letters.map((letter) => letter.result));
+    return feedbackMatches(
+      this.word,
+      word,
+      this.letters.map((letter) => letter.result),
+    );
   }
 
   get values(): LetterInputValue[] {
-    return this.letters.map(letter => [letter.letter, letter.result]);
+    return this.letters.map((letter) => [letter.letter, letter.result]);
   }
 }
 
@@ -48,7 +56,7 @@ export interface GameContextInterface {
   currentValidWords: string[];
   scoredWords: [string, number][];
   guesses: Guess[];
-  onGuessSubmit: (event: SubmitEvent) => string|null;
+  onGuessSubmit: (event: SubmitEvent) => string | null;
   resetTime: number;
   requestReset: () => void;
   selectedChoice: string;

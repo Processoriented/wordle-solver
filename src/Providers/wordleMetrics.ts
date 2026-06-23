@@ -5,11 +5,14 @@ export type ScoringMetric = 'entropy' | 'expectedRemaining';
 export const SOLVE_MODE_THRESHOLD = 5;
 
 export function getOutcomes(guess: string, answers: string[]): Record<string, number> {
-  return answers.reduce((acc, word) => {
-    const pattern = feedbackPattern(guess, word);
-    acc[pattern] = (acc[pattern] ?? 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  return answers.reduce(
+    (acc, word) => {
+      const pattern = feedbackPattern(guess, word);
+      acc[pattern] = (acc[pattern] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 }
 
 export function groupByPattern(guess: string, answers: string[]): Map<string, string[]> {
@@ -95,19 +98,25 @@ export function twoStepScore(
 
 export function positionalFrequencyScore(
   word: string,
-  frequencies: { [key: number]: { [key: string]: number } },
+  frequencies: Record<number, Record<string, number>>,
 ): number {
-  return word.split('')
+  return word
+    .split('')
     .map((letter, idx) => frequencies[idx]?.[letter] ?? 0)
     .reduce((sum, freq) => sum + freq, 0);
 }
 
-export function buildPositionalFrequencies(answers: string[]): { [key: number]: { [key: string]: number } } {
-  return answers.reduce((acc, word) => {
-    word.split('').forEach((letter, idx) => {
-      acc[idx] = acc[idx] ?? {};
-      acc[idx][letter] = (acc[idx][letter] ?? 0) + 1;
-    });
-    return acc;
-  }, [] as { [key: number]: { [key: string]: number } });
+export function buildPositionalFrequencies(
+  answers: string[],
+): Record<number, Record<string, number>> {
+  return answers.reduce(
+    (acc, word) => {
+      word.split('').forEach((letter, idx) => {
+        acc[idx] = acc[idx] ?? {};
+        acc[idx][letter] = (acc[idx][letter] ?? 0) + 1;
+      });
+      return acc;
+    },
+    [] as Record<number, Record<string, number>>,
+  );
 }
