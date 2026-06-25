@@ -26,6 +26,10 @@ The build is minified and filenames include content hashes.
 
 Serves the production build locally for testing before deployment.
 
+### `npm run generate-scores`
+
+Regenerates [`src/Providers/validWords.scored.ts`](src/Providers/validWords.scored.ts) from the word list. The script builds a feedback pattern matrix, then computes 1-step and 2-step scores. It prints a timing summary when finished (typically ~3 minutes for the full dictionary). Use `--no-matrix` to run the legacy string-based path for comparison.
+
 ## Docker
 
 Build and run the container:

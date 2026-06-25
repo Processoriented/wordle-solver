@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { buildPatternMatrix } from './patternMatrix';
 import {
   compareScores,
   expectedRemaining,
@@ -42,6 +43,7 @@ describe('compareScores', () => {
 
 describe('scoreGuess', () => {
   const answers = ['speed', 'sheep', 'stare', 'erase'];
+  const matrix = buildPatternMatrix([...answers, 'raise']);
 
   it('scores guesses against the answer pool only', () => {
     const outcomes = getOutcomes('raise', answers);
@@ -53,10 +55,21 @@ describe('scoreGuess', () => {
       expectedRemaining(outcomes, answers.length),
     );
   });
+
+  it('matches the string path when a pattern matrix is provided', () => {
+    expect(scoreGuess('raise', answers, SCORING_METRIC.ENTROPY, matrix)).toBe(
+      scoreGuess('raise', answers, SCORING_METRIC.ENTROPY),
+    );
+    expect(scoreGuess('raise', answers, SCORING_METRIC.EXPECTED_REMAINING, matrix)).toBe(
+      scoreGuess('raise', answers, SCORING_METRIC.EXPECTED_REMAINING),
+    );
+    expect(getOutcomes('raise', answers, matrix)).toEqual(getOutcomes('raise', answers));
+  });
 });
 
 describe('twoStepScore', () => {
   const words = ['speed', 'sheep', 'stare', 'erase'];
+  const matrix = buildPatternMatrix([...words, 'raise']);
 
   it('weights the best follow-up guess in each feedback bucket', () => {
     const firstGuess = 'raise';
@@ -78,6 +91,10 @@ describe('twoStepScore', () => {
     }, 0);
 
     expect(twoStepScore(firstGuess, words, words, SCORING_METRIC.ENTROPY)).toBeCloseTo(manual, 10);
+    expect(twoStepScore(firstGuess, words, words, SCORING_METRIC.ENTROPY, matrix)).toBeCloseTo(
+      manual,
+      10,
+    );
   });
 
   it('prefers a strong two-step opener on a tiny dictionary', () => {
