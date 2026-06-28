@@ -37,7 +37,7 @@ export default defineConfig(
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     },
   },
   {

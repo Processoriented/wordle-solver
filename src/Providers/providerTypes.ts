@@ -68,7 +68,7 @@ export class Guess {
   }
 }
 
-export interface GameContextInterface {
+export type GameContextInterface = {
   allValidWords: string[];
   currentValidWords: string[];
   scoredWords: [string, number][];
@@ -88,4 +88,4 @@ export interface GameContextInterface {
   scoringWorkerError: string | null;
   refineAnyway: () => void;
   twoStepEstimateMs: number;
-}
+};

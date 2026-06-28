@@ -208,15 +208,17 @@ export default function GameProvider({ children }) {
 
     if (scoringMetric === SCORING_METRIC.EXPECTED_REMAINING) {
       return guessPool
-        .map((word) => [word, scoreGuess(word, remainingAnswers, scoringMetric)] as [string, number])
+        .map(
+          (word) => [word, scoreGuess(word, remainingAnswers, scoringMetric)] as [string, number],
+        )
         .sort(([, a], [, b]) => compareScores(a, b, scoringMetric));
     }
 
     return guessPool
-      .map((word) => [word, scoreGuess(word, remainingAnswers, SCORING_METRIC.ENTROPY)] as [
-        string,
-        number,
-      ])
+      .map(
+        (word) =>
+          [word, scoreGuess(word, remainingAnswers, SCORING_METRIC.ENTROPY)] as [string, number],
+      )
       .sort(([, a], [, b]) => compareScores(a, b, SCORING_METRIC.ENTROPY));
   }, [
     guessPool,

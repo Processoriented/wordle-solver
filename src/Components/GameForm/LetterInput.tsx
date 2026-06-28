@@ -23,14 +23,14 @@ import './LetterInput.scss';
 
 const dfltVal: LetterInputValue = ['', LETTER_RESULT.NONE];
 
-interface Props {
+type Props = {
   ref?: Ref<HTMLInputElement>;
   defaultValue?: LetterInputValue;
   disabled?: boolean;
   name?: GuessLetterField;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   value?: LetterInputValue;
-}
+};
 
 function LetterInput({
   ref,
