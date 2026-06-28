@@ -104,3 +104,54 @@ export function buildPatternMatrix(
 
   return { size, data, wordIndex };
 }
+
+const PATTERN_MATRIX_MAGIC = 0x504d4154; // "PMAT"
+
+export function serializePatternMatrix(matrix: PatternMatrix): ArrayBuffer {
+  const headerBytes = 8;
+  const buffer = new ArrayBuffer(headerBytes + matrix.data.byteLength);
+  const view = new DataView(buffer);
+  view.setUint32(0, PATTERN_MATRIX_MAGIC, true);
+  view.setUint32(4, matrix.size, true);
+  new Uint8Array(buffer, headerBytes).set(matrix.data);
+  return buffer;
+}
+
+export function deserializePatternMatrix(
+  buffer: ArrayBuffer,
+  words: readonly string[],
+): PatternMatrix {
+  const view = new DataView(buffer);
+  const magic = view.getUint32(0, true);
+  if (magic !== PATTERN_MATRIX_MAGIC) {
+    throw new Error('Invalid pattern matrix file');
+  }
+  const size = view.getUint32(4, true);
+  const expectedBytes = size * size;
+  const data = new Uint8Array(buffer, 8, expectedBytes);
+  if (data.length !== expectedBytes) {
+    throw new Error(`Pattern matrix size mismatch: expected ${expectedBytes.toString()} bytes`);
+  }
+  if (words.length !== size) {
+    throw new Error(
+      `Word list size (${words.length.toString()}) does not match matrix (${size.toString()})`,
+    );
+  }
+  return {
+    size,
+    data: new Uint8Array(data),
+    wordIndex: buildWordIndex(words),
+  };
+}
+
+export async function loadPatternMatrix(
+  words: readonly string[],
+  url: string,
+): Promise<PatternMatrix> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to load pattern matrix: ${response.statusText}`);
+  }
+  const buffer = await response.arrayBuffer();
+  return deserializePatternMatrix(buffer, words);
+}

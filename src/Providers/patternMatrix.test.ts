@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPatternMatrix,
   buildWordIndex,
+  deserializePatternMatrix,
   getIdToPattern,
   getPatternId,
   getPatternToId,
+  serializePatternMatrix,
 } from './patternMatrix';
 import { feedbackPattern } from './wordleScore';
 
@@ -43,5 +45,12 @@ describe('buildPatternMatrix', () => {
         expect(matrix.data[guessIdx * matrix.size + answerIdx]).toBe(expectedId);
       }
     }
+  });
+
+  it('round-trips through binary serialization', () => {
+    const buffer = serializePatternMatrix(matrix);
+    const restored = deserializePatternMatrix(buffer, testWords);
+    expect(restored.size).toBe(matrix.size);
+    expect(restored.data).toEqual(matrix.data);
   });
 });

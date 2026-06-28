@@ -32,6 +32,81 @@
         cursor: pointer;
       }
     }
+
+    .choices-two-step {
+      border: none;
+      margin: 0.75rem 0 0;
+      padding: 0;
+
+      legend {
+        padding: 0;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .choices-two-step-mode {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+
+        label {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          cursor: pointer;
+        }
+      }
+
+      .choices-two-step-inputs {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+
+        label {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          font-size: 0.875rem;
+
+          input {
+            width: 6rem;
+          }
+        }
+      }
+
+      .choices-estimate {
+        margin: 0.5rem 0;
+        font-weight: 600;
+
+        &--green {
+          color: #2e7d32;
+        }
+
+        &--yellow {
+          color: #f9a825;
+        }
+
+        &--red {
+          color: #c62828;
+        }
+      }
+
+      .choices-status {
+        margin: 0.25rem 0;
+        font-size: 0.875rem;
+
+        &--error {
+          color: #c62828;
+        }
+      }
+
+      .choices-refine {
+        margin-top: 0.5rem;
+        cursor: pointer;
+      }
+    }
   }
 
   .choice-list {

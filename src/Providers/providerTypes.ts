@@ -2,6 +2,7 @@ import type { SubmitEvent as ReactSubmitEvent } from 'react';
 
 import { feedbackMatches } from './wordleScore';
 import { LETTER_RESULT, type LetterInputValue, type LetterResult } from './letterTypes';
+import type { ScoringPhase, TwoStepSettings } from './twoStepEntropy';
 
 export {
   GUESS_LETTER_FIELD,
@@ -81,4 +82,10 @@ export interface GameContextInterface {
   setScoringMetric: (metric: ScoringMetric) => void;
   scoringMode: ScoringMode;
   remainingAnswerCount: number;
+  twoStepSettings: TwoStepSettings;
+  setTwoStepSettings: (settings: TwoStepSettings) => void;
+  scoringPhase: ScoringPhase;
+  scoringWorkerError: string | null;
+  refineAnyway: () => void;
+  twoStepEstimateMs: number;
 }
