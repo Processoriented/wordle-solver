@@ -10,6 +10,7 @@
 
 # production
 /dist
+/public/patterns.bin
 
 # misc
 .DS_Store

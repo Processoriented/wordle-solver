@@ -1,0 +1,9 @@
+Wordle 1,832 3/6
+
+⬛⬛⬛⬛⬛
+⬛🟨🟨🟩⬛
+🟩🟩🟩🟩🟩
+
+WordleBot
+Skill 97/99
+Luck 49/99

@@ -1,4 +1,4 @@
-import { LetterResult } from './letterTypes';
+import { LETTER_RESULT, type LetterResult } from './letterTypes';
 
 function normalize(word: string): string {
   return word.toLowerCase();
@@ -7,21 +7,24 @@ function normalize(word: string): string {
 export function scoreGuess(guess: string, answer: string): LetterResult[] {
   const normalizedGuess = normalize(guess);
   const normalizedAnswer = normalize(answer);
-  const results: LetterResult[] = Array.from({ length: 5 }, (): LetterResult => 'incorrect');
+  const results: LetterResult[] = Array.from(
+    { length: 5 },
+    (): LetterResult => LETTER_RESULT.INCORRECT,
+  );
   const remaining = normalizedAnswer.split('');
 
   for (let i = 0; i < 5; i++) {
     if (normalizedGuess[i] === remaining[i]) {
-      results[i] = 'placed';
+      results[i] = LETTER_RESULT.PLACED;
       remaining[i] = '\0';
     }
   }
 
   for (let i = 0; i < 5; i++) {
-    if (results[i] === 'placed') continue;
+    if (results[i] === LETTER_RESULT.PLACED) continue;
     const idx = remaining.indexOf(normalizedGuess[i]);
     if (idx !== -1) {
-      results[i] = 'misplaced';
+      results[i] = LETTER_RESULT.MISPLACED;
       remaining[idx] = '\0';
     }
   }
@@ -32,8 +35,8 @@ export function scoreGuess(guess: string, answer: string): LetterResult[] {
 export function feedbackPattern(guess: string, answer: string): string {
   return scoreGuess(guess, answer)
     .map((result) => {
-      if (result === 'placed') return 'C';
-      if (result === 'misplaced') return 'M';
+      if (result === LETTER_RESULT.PLACED) return 'C';
+      if (result === LETTER_RESULT.MISPLACED) return 'M';
       return 'W';
     })
     .join('');

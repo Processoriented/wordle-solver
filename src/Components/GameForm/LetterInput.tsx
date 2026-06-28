@@ -11,29 +11,32 @@ import {
 
 import {
   GuessLetter,
+  GUESS_LETTER_FIELDS,
+  guessLetterResultField,
   LetterInputValue,
   LETTER_RESULT,
   LetterResult,
+  type GuessLetterField,
 } from '../../Providers/providerTypes';
 import { useGameContext } from '../../Providers/GameContext';
 import './LetterInput.scss';
 
-const dfltVal: LetterInputValue = ['', 'none'];
+const dfltVal: LetterInputValue = ['', LETTER_RESULT.NONE];
 
-interface Props {
+type Props = {
   ref?: Ref<HTMLInputElement>;
   defaultValue?: LetterInputValue;
   disabled?: boolean;
-  name?: string;
+  name?: GuessLetterField;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   value?: LetterInputValue;
-}
+};
 
 function LetterInput({
   ref,
   defaultValue = dfltVal,
   disabled = false,
-  name = '',
+  name,
   onChange = () => undefined,
   value: propVal,
 }: Props) {
@@ -44,13 +47,14 @@ function LetterInput({
   const inputRef = ref ?? localRef;
 
   const letterIdx = useMemo(() => {
-    return ['first', 'second', 'third', 'fourth', 'fifth'].indexOf(name);
+    if (!name) return -1;
+    return GUESS_LETTER_FIELDS.indexOf(name);
   }, [name]);
 
   const previousValResults = useMemo(() => {
     if (!(Array.isArray(guesses) && guesses.length > 0)) return {};
     return guesses
-      .filter((guess) => Array.isArray(guess?.letters) && guess.letters.length > letterIdx)
+      .filter((guess) => Array.isArray(guess.letters) && guess.letters.length > letterIdx)
       .map(({ letters }) => letters[letterIdx])
       .filter((letter) => letter instanceof GuessLetter)
       .reduce((acc, { letter, result }) => ({ ...acc, [letter]: result }), {});
@@ -66,9 +70,9 @@ function LetterInput({
     if (typeof propVal === 'undefined') return;
     const [val, rawResult] = propVal;
     const result =
-      rawResult !== 'none'
+      rawResult !== LETTER_RESULT.NONE
         ? rawResult
-        : ((previousValResults[val] as LetterResult | undefined) ?? 'none');
+        : ((previousValResults[val] as LetterResult | undefined) ?? LETTER_RESULT.NONE);
     const nextValue = [val, result] as LetterInputValue;
     setValue(nextValue);
   }, [name, previousValResults, propVal]);
@@ -121,7 +125,7 @@ function LetterInput({
   }, [disabled, handleChange, value]);
 
   const hiddenProps = useMemo(() => {
-    const always = { name: `${name}Result` };
+    const always = { name: name ? guessLetterResultField(name) : undefined };
     return disabled ? { ...always, defaultValue: value[1] } : { ...always, value: value[1] };
   }, [disabled, name, value]);
 

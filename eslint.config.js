@@ -21,7 +21,7 @@ export default defineConfig(
   {
     extends: [
       js.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,
       eslintPluginPrettierRecommended,
     ],
@@ -37,6 +37,7 @@ export default defineConfig(
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     },
   },
   {

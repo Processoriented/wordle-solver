@@ -8,10 +8,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run generate-patterns && tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "generate-scores": "tsx scripts/generate-scores.ts",
+    "generate-patterns": "tsx scripts/generate-patterns.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

@@ -1,16 +1,33 @@
 import type { SubmitEvent as ReactSubmitEvent } from 'react';
 
 import { feedbackMatches } from './wordleScore';
-import { LetterInputValue, LetterResult } from './letterTypes';
+import { LETTER_RESULT, type LetterInputValue, type LetterResult } from './letterTypes';
+import type { ScoringPhase, TwoStepSettings } from './twoStepEntropy';
 
-export { LETTER_RESULT, type LetterInputValue, type LetterResult } from './letterTypes';
-export interface positionObj {
-  solution: string;
-  misplaced: string[];
-}
+export {
+  GUESS_LETTER_FIELD,
+  GUESS_LETTER_FIELDS,
+  guessLetterResultField,
+  LETTER_RESULT,
+  type GuessLetterField,
+  type LetterInputValue,
+  type LetterResult,
+} from './letterTypes';
 export type SubmitEvent = ReactSubmitEvent<HTMLFormElement>;
-export type ScoringMetric = 'entropy' | 'expectedRemaining';
-export type ScoringMode = 'probe' | 'solve';
+
+export const SCORING_METRIC = {
+  ENTROPY: 'entropy',
+  EXPECTED_REMAINING: 'expectedRemaining',
+} as const;
+
+export type ScoringMetric = (typeof SCORING_METRIC)[keyof typeof SCORING_METRIC];
+
+export const SCORING_MODE = {
+  PROBE: 'probe',
+  SOLVE: 'solve',
+} as const;
+
+export type ScoringMode = (typeof SCORING_MODE)[keyof typeof SCORING_MODE];
 
 export class GuessLetter {
   letter: string;
@@ -30,7 +47,7 @@ export class Guess {
   constructor(attempt: string, results: LetterResult[]) {
     this.letters = attempt
       .split('')
-      .map((letter, idx) => new GuessLetter(letter, results[idx] ?? 'none', idx));
+      .map((letter, idx) => new GuessLetter(letter, results[idx] ?? LETTER_RESULT.NONE, idx));
   }
 
   get word() {
@@ -51,7 +68,7 @@ export class Guess {
   }
 }
 
-export interface GameContextInterface {
+export type GameContextInterface = {
   allValidWords: string[];
   currentValidWords: string[];
   scoredWords: [string, number][];
@@ -65,4 +82,10 @@ export interface GameContextInterface {
   setScoringMetric: (metric: ScoringMetric) => void;
   scoringMode: ScoringMode;
   remainingAnswerCount: number;
-}
+  twoStepSettings: TwoStepSettings;
+  setTwoStepSettings: (settings: TwoStepSettings) => void;
+  scoringPhase: ScoringPhase;
+  scoringWorkerError: string | null;
+  refineAnyway: () => void;
+  twoStepEstimateMs: number;
+};
