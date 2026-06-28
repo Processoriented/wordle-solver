@@ -1,0 +1,7 @@
+services:
+  wordle-solver:
+    image: ghcr.io/processoriented/wordle-solver:${IMAGE_TAG:?IMAGE_TAG is required}
+    container_name: wordle-solver
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3010:3000'
